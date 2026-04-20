@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة مستر مصطفى السايس</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --physics: #00d4ff;
+  --science: #39d353;
+  --atom: #ff6b35;
+  --dark-bg: #050d1a;
+  --card-bg: #0a1628;
+  --card-border: #0f2040;
+  --text-main: #e8f4ff;
+  --text-muted: #7a9abf;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Cairo',sans-serif; background:var(--dark-bg); color:var(--text-main); overflow-x:hidden; }
+#bg-canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.page { display:none; position:relative; z-index:1; min-height:100vh; }
+.page.active { display:block; }
+
+/* NAV */
+nav {
+  position:fixed; top:0; width:100%; z-index:100;
+  background:rgba(5,13,26,0.92); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,212,255,0.15);
+  padding:0 32px; display:flex; align-items:center;
+  justify-content:space-between; height:68px;
+}
+.nav-logo { display:flex; align-items:center; gap:12px; cursor:pointer; }
+.nav-logo svg { animation:spin 8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.nav-logo h1 { font-size:1rem; font-weight:700; line-height:1.2; }
+.nav-logo h1 span { display:block; font-size:0.72rem; color:var(--text-muted); font-weight:400; }
+.nav-links { display:flex; gap:4px; list-style:none; align-items:center; }
+.nav-links button {
+  background:none; border:none; color:var(--text-muted); font-family:'Cairo',sans-serif;
+  font-size:.88rem; padding:8px 14px; border-radius:8px; cursor:pointer; transition:all .3s;
+}
+.nav-links button:hover,.nav-links button.active { color:var(--physics); background:rgba(0,212,255,.08); }
+.btn-nav-login { background:linear-gradient(135deg,var(--physics),#0099bb)!important; color:#000!important; font-weight:700!important; border-radius:25px!important; }
+#nav-user { display:none; align-items:center; gap:10px; }
+#nav-uname { font-size:.85rem; color:var(--physics); font-weight:700; }
+.btn-logout { background:rgba(255,107,53,.12); border:1px solid rgba(255,107,53,.3); color:var(--atom); font-family:'Cairo',sans-serif; font-size:.8rem; padding:6px 14px; border-radius:20px; cursor:pointer; transition:.3s; }
+.btn-logout:hover { background:rgba(255,107,53,.25); }
+
+/* HERO */
+.hero { padding:120px 40px 60px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+.hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.3); border-radius:50px; padding:7px 20px; font-size:.82rem; color:var(--physics); margin-bottom:28px; }
+.dot { width:7px; height:7px; background:var(--science); border-radius:50%; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+.hero h2 { font-size:clamp(2rem,5vw,3.6rem); font-weight:900; line-height:1.15; margin-bottom:18px; }
+.gp { background:linear-gradient(90deg,var(--physics),#80eaff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.gs { background:linear-gradient(90deg,var(--science),#90f5a0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { color:var(--text-muted); font-size:1rem; line-height:1.8; margin-bottom:36px; max-width:600px; }
+.hero-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+
+/* BUTTONS */
+.btn-p { background:linear-gradient(135deg,var(--physics),#0099bb); color:#000; font-weight:700; padding:13px 30px; border-radius:50px; border:none; cursor:pointer; font-size:.95rem; font-family:'Cairo',sans-serif; transition:all .3s; box-shadow:0 0 25px rgba(0,212,255,.3); display:inline-flex; align-items:center; gap:7px; }
+.btn-p:hover { transform:translateY(-3px); box-shadow:0 0 45px rgba(0,212,255,.5); }
+.btn-s { background:rgba(57,211,83,.1); color:var(--science); font-weight:700; padding:13px 30px; border-radius:50px; border:1px solid rgba(57,211,83,.4); cursor:pointer; font-size:.95rem; font-family:'Cairo',sans-serif; transition:all .3s; display:inline-flex; align-items:center; gap:7px; }
+.btn-s:hover { background:rgba(57,211,83,.2); transform:translateY(-3px); }
+
+/* STATS */
+.stats { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; padding:0 40px 70px; position:relative; z-index:1; }
+.stat-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:22px 32px; text-align:center; min-width:140px; transition:all .3s; position:relative; overflow:hidden; }
+.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.sc-b::before { background:linear-gradient(90deg,var(--physics),transparent); }
+.sc-g::before { background:linear-gradient(90deg,var(--science),transparent); }
+.sc-o::before { background:linear-gradient(90deg,var(--atom),transparent); }
+.stat-card:hover { transform:translateY(-5px); }
+.stat-num { font-size:2rem; font-weight:900; line-height:1; margin-bottom:5px; }
+.sc-b .stat-num { color:var(--physics); }
+.sc-g .stat-num { color:var(--science); }
+.sc-o .stat-num { color:var(--atom); }
+.stat-label { font-size:.82rem; color:var(--text-muted); }
+
+/* SECTION */
+.sec { position:relative; z-index:1; padding:70px 40px; max-width:1200px; margin:0 auto; }
+.sec-head { text-align:center; margin-bottom:50px; }
+.sec-tag { display:inline-block; font-size:.75rem; font-weight:700; letter-spacing:2px; margin-bottom:10px; padding:4px 16px; border-radius:50px; }
+.tag-b { color:var(--physics); background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.2); }
+.tag-g { color:var(--science); background:rgba(57,211,83,.08); border:1px solid rgba(57,211,83,.2); }
+.sec-head h3 { font-size:1.9rem; font-weight:800; margin-bottom:10px; }
+.sec-head p { color:var(--text-muted); font-size:.95rem; }
+
+/* CARDS */
+.subj-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:22px; }
+.subj-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:18px; padding:28px; transition:all .4s; cursor:pointer; position:relative; overflow:hidden; }
+.subj-card:hover { transform:translateY(-7px); }
+.subj-card.ph:hover { border-color:rgba(0,212,255,.3); }
+.subj-card.sc:hover { border-color:rgba(57,211,83,.3); }
+.subj-card.ch:hover { border-color:rgba(255,107,53,.3); }
+.s-icon { width:58px; height:58px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.9rem; margin-bottom:18px; }
+.ph .s-icon { background:rgba(0,212,255,.1); }
+.sc .s-icon { background:rgba(57,211,83,.1); }
+.ch .s-icon { background:rgba(255,107,53,.1); }
+.subj-card h4 { font-size:1.1rem; font-weight:700; margin-bottom:7px; }
+.subj-card p { color:var(--text-muted); font-size:.85rem; line-height:1.6; margin-bottom:16px; }
+.s-tags { display:flex; gap:8px; flex-wrap:wrap; }
+.stag { font-size:.72rem; padding:3px 11px; border-radius:20px; font-weight:600; }
+.ph .stag { background:rgba(0,212,255,.1); color:var(--physics); }
+.sc .stag { background:rgba(57,211,83,.1); color:var(--science); }
+.ch .stag { background:rgba(255,107,53,.1); color:var(--atom); }
+
+/* DIVIDER */
+.divl { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 40px; }
+.divl hr { border:none; height:1px; background:linear-gradient(90deg,transparent,rgba(0,212,255,.15),transparent); }
+
+/* FEAT */
+.feat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; }
+.feat-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:26px; transition:all .3s; }
+.feat-card:hover { border-color:rgba(0,212,255,.2); transform:translateY(-4px); }
+.feat-card .fi { font-size:1.9rem; margin-bottom:14px; display:block; }
+.feat-card h4 { font-size:.95rem; font-weight:700; margin-bottom:7px; }
+.feat-card p { color:var(--text-muted); font-size:.82rem; line-height:1.6; }
+
+/* LOGIN PAGE */
+.login-page { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:100px 20px 40px; }
+.login-box { background:var(--card-bg); border:1px solid rgba(0,212,255,.2); border-radius:24px; padding:40px; width:100%; max-width:460px; }
+.login-box h2 { font-size:1.5rem; font-weight:800; text-align:center; margin-bottom:6px; }
+.login-box .sub { text-align:center; color:var(--text-muted); font-size:.88rem; margin-bottom:28px; }
+.tabs { display:flex; background:rgba(255,255,255,.03); border-radius:12px; padding:4px; margin-bottom:24px; }
+.tab-btn { flex:1; padding:10px; text-align:center; border-radius:10px; cursor:pointer; font-size:.88rem; font-weight:600; color:var(--text-muted); transition:.3s; font-family:'Cairo',sans-serif; border:none; background:none; }
+.tab-btn.active { background:linear-gradient(135deg,var(--physics),#0099bb); color:#000; }
+.tab-btn.active.green { background:linear-gradient(135deg,var(--science),#22a33a); }
+.fg { margin-bottom:16px; }
+.fg label { display:block; font-size:.82rem; color:var(--text-muted); margin-bottom:7px; font-weight:600; }
+.fg input, .fg select { width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px 16px; color:var(--text-main); font-family:'Cairo',sans-serif; font-size:.92rem; transition:.3s; outline:none; }
+.fg input:focus { border-color:var(--physics); background:rgba(0,212,255,.05); box-shadow:0 0 0 3px rgba(0,212,255,.1); }
+.fg select { cursor:pointer; }
+.fg select option { background:var(--card-bg); }
+.btn-submit { width:100%; background:linear-gradient(135deg,var(--physics),#0099bb); color:#000; font-weight:800; padding:14px; border-radius:12px; border:none; cursor:pointer; font-size:.95rem; font-family:'Cairo',sans-serif; margin-top:8px; transition:all .3s; }
+.btn-submit:hover { transform:translateY(-2px); box-shadow:0 0 30px rgba(0,212,255,.4); }
+.btn-submit.green { background:linear-gradient(135deg,var(--science),#22a33a); }
+.err { color:#ff6b6b; font-size:.82rem; text-align:center; margin-top:10px; min-height:20px; }
+
+/* DASH */
+.dash-page { padding:90px 32px 40px; max-width:1100px; margin:0 auto; }
+.dash-hd { margin-bottom:36px; }
+.dash-hd h2 { font-size:1.7rem; font-weight:800; margin-bottom:6px; }
+.dash-hd p { color:var(--text-muted); font-size:.9rem; }
+.dash-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:24px; transition:all .3s; margin-bottom:20px; }
+.dash-card h3 { font-size:1rem; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+/* EXAM LIST */
+.exam-list { display:flex; flex-direction:column; gap:14px; }
+.exam-item { background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:18px 22px; display:flex; align-items:center; gap:16px; transition:all .3s; }
+.exam-item:hover { border-color:rgba(0,212,255,.2); }
+.e-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; background:rgba(0,212,255,.1); }
+.e-info { flex:1; }
+.e-info h4 { font-size:.95rem; font-weight:700; margin-bottom:4px; }
+.e-info p { font-size:.78rem; color:var(--text-muted); }
+
+/* GRADES TABLE */
+.gtable { width:100%; border-collapse:collapse; }
+.gtable th { text-align:right; padding:10px 14px; font-size:.8rem; color:var(--text-muted); border-bottom:1px solid var(--card-border); }
+.gtable td { padding:12px 14px; font-size:.88rem; border-bottom:1px solid rgba(255,255,255,.03); }
+.gtable tr:hover td { background:rgba(0,212,255,.03); }
+.gb { display:inline-block; padding:3px 12px; border-radius:20px; font-size:.78rem; font-weight:700; }
+.ga { background:rgba(57,211,83,.12); color:var(--science); }
+.gb2 { background:rgba(0,212,255,.12); color:var(--physics); }
+.gc { background:rgba(255,107,53,.12); color:var(--atom); }
+
+/* EXAM PAGE */
+.exam-pg { padding:90px 32px 40px; max-width:900px; margin:0 auto; }
+.exam-timer-box { background:var(--card-bg); border:1px solid rgba(0,212,255,.25); border-radius:14px; padding:12px 24px; text-align:center; }
+.timer-label { font-size:.75rem; color:var(--text-muted); margin-bottom:2px; }
+.timer-val { font-size:1.8rem; font-weight:900; color:var(--physics); font-variant-numeric:tabular-nums; }
+.q-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:24px; margin-bottom:16px; }
+.q-text { font-weight:700; margin-bottom:14px; font-size:.95rem; }
+.opts-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.opt-label { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.03); border:1px solid var(--card-border); border-radius:10px; padding:12px 14px; cursor:pointer; transition:.2s; }
+.opt-label:hover { border-color:rgba(0,212,255,.3); }
+.opt-label input { accent-color:var(--physics); }
+
+/* TEACHER DASH */
+.t-grid { display:grid; grid-template-columns:230px 1fr; gap:0; min-height:calc(100vh - 68px); padding-top:68px; }
+.t-sidebar { background:var(--card-bg); border-left:1px solid var(--card-border); padding:28px 16px; position:sticky; top:68px; height:calc(100vh - 68px); overflow-y:auto; }
+.sb-title { font-size:.72rem; color:var(--text-muted); font-weight:700; letter-spacing:2px; margin-bottom:12px; padding:0 8px; }
+.sb-btn { display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; color:var(--text-muted); font-family:'Cairo',sans-serif; font-size:.88rem; padding:10px 12px; border-radius:10px; cursor:pointer; transition:all .3s; margin-bottom:4px; text-align:right; }
+.sb-btn:hover,.sb-btn.active { color:var(--physics); background:rgba(0,212,255,.08); }
+.t-main { padding:28px 32px 40px; }
+.panel { display:none; }
+.panel.active { display:block; }
+.panel-title { font-size:1.4rem; font-weight:800; margin-bottom:24px; }
+
+/* FORM */
+.f-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.f-field { margin-bottom:16px; }
+.f-field label { display:block; font-size:.82rem; color:var(--text-muted); margin-bottom:7px; font-weight:600; }
+.f-field input,.f-field select,.f-field textarea { width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:11px 14px; color:var(--text-main); font-family:'Cairo',sans-serif; font-size:.9rem; outline:none; }
+.f-field select { cursor:pointer; }
+.f-field select option { background:var(--card-bg); }
+.f-field textarea { resize:vertical; min-height:80px; }
+
+/* Q BUILDER */
+.q-builder { background:rgba(0,212,255,.04); border:1px solid rgba(0,212,255,.12); border-radius:14px; padding:20px; margin-bottom:16px; }
+.q-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.q-num { font-weight:800; color:var(--physics); font-size:.9rem; }
+.btn-rm { background:rgba(255,107,53,.1); border:1px solid rgba(255,107,53,.2); color:var(--atom); border-radius:8px; padding:4px 12px; cursor:pointer; font-size:.8rem; font-family:'Cairo',sans-serif; }
+.opts-build { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.ob { display:flex; align-items:center; gap:8px; }
+.ob input[type=radio] { accent-color:var(--science); }
+.ob input[type=text] { flex:1; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:9px 12px; color:var(--text-main); font-family:'Cairo',sans-serif; font-size:.88rem; outline:none; }
+
+/* STUDENTS TABLE */
+.stable { width:100%; border-collapse:collapse; }
+.stable th { text-align:right; padding:12px 16px; font-size:.8rem; color:var(--text-muted); border-bottom:1px solid var(--card-border); background:rgba(0,212,255,.03); }
+.stable td { padding:13px 16px; font-size:.85rem; border-bottom:1px solid rgba(255,255,255,.03); }
+.stable tr:hover td { background:rgba(0,212,255,.03); }
+.search-bar { width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:11px 16px; color:var(--text-main); font-family:'Cairo',sans-serif; font-size:.9rem; outline:none; margin-bottom:20px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:30px; right:30px; z-index:999; background:var(--card-bg); border:1px solid rgba(57,211,83,.4); border-radius:14px; padding:14px 24px; font-size:.9rem; color:var(--science); transform:translateY(100px); opacity:0; transition:all .4s cubic-bezier(.34,1.56,.64,1); pointer-events:none; }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.err { color:var(--atom); border-color:rgba(255,107,53,.4); }
+
+/* LOADING */
+.loading { position:fixed; inset:0; background:rgba(5,13,26,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:500; transition:.3s; }
+.loading.hidden { opacity:0; pointer-events:none; }
+.spinner { width:46px; height:46px; border:3px solid rgba(0,212,255,.2); border-top-color:var(--physics); border-radius:50%; animation:spin .8s linear infinite; margin-bottom:14px; }
+.loading p { color:var(--text-muted); font-size:.9rem; }
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--dark-bg); }
+::-webkit-scrollbar-thumb { background:rgba(0,212,255,.25); border-radius:3px; }
+
+@media(max-width:768px) {
+  nav { padding:0 16px; }
+  .nav-links { display:none; }
+  .t-grid { grid-template-columns:1fr; }
+  .t-sidebar { position:static; height:auto; }
+  .f-row { grid-template-columns:1fr; }
+  .opts-build { grid-template-columns:1fr; }
+  .opts-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>جاري التحميل...</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="goPage('home')">
+    <svg width="38" height="38" viewBox="0 0 42 42" fill="none">
+      <circle cx="21" cy="21" r="4" fill="#00d4ff"/>
+      <ellipse cx="21" cy="21" rx="18" ry="8" stroke="#00d4ff" stroke-width="1.5" fill="none" opacity=".6"/>
+      <ellipse cx="21" cy="21" rx="18" ry="8" stroke="#39d353" stroke-width="1.5" fill="none" opacity=".6" transform="rotate(60 21 21)"/>
+      <ellipse cx="21" cy="21" rx="18" ry="8" stroke="#ff6b35" stroke-width="1.5" fill="none" opacity=".6" transform="rotate(120 21 21)"/>
+      <circle cx="21" cy="13" r="2.5" fill="#39d353"/>
+    </svg>
+    <h1>مستر مصطفى السايس <span>منصة الفيزياء والعلوم</span></h1>
+  </div>
+  <ul class="nav-links">
+    <li><button onclick="goPage('home')" id="nb-home" class="active">🏠 الرئيسية</button></li>
+    <li><button onclick="goPage('exams')" id="nb-exams">📝 الامتحانات</button></li>
+    <li><button onclick="goPage('sdash')" id="nb-sdash" style="display:none">📊 لوحتي</button></li>
+    <li><button onclick="goPage('tdash')" id="nb-tdash" style="display:none">⚙️ لوحة المدرس</button></li>
+  </ul>
+  <div id="nav-user">
+    <span id="nav-uname"></span>
+    <button class="btn-logout" onclick="doLogout()">خروج</button>
+  </div>
+  <button class="btn-nav-login" id="nb-login" onclick="goPage('login')" style="font-family:Cairo,sans-serif;font-size:.88rem;padding:8px 20px;border-radius:25px;border:none;cursor:pointer;">تسجيل الدخول</button>
+</nav>
+
+<!-- ═══ HOME ═══ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge"><span class="dot"></span>المنصة التعليمية الرسمية · ٢٠٢٥</div>
+    <h2>تعلّم <span class="gp">الفيزياء</span><br>واكتشف <span class="gs">العلوم</span></h2>
+    <p>منصة تعليمية متكاملة للمرحلة الإعدادية والابتدائية<br>شرح مبسّط · امتحانات تفاعلية · متابعة فورية للدرجات</p>
+    <div class="hero-btns">
+      <button class="btn-p" onclick="goPage('login')">⚛ ابدأ الآن</button>
+      <button class="btn-s" onclick="goPage('exams')">📝 الامتحانات</button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat-card sc-b"><div class="stat-num" id="st-students">٠</div><div class="stat-label">طالب مسجّل</div></div>
+    <div class="stat-card sc-g"><div class="stat-num" id="st-exams">٠</div><div class="stat-label">امتحان متاح</div></div>
+    <div class="stat-card sc-o"><div class="stat-num" id="st-grades">٠</div><div class="stat-label">إجابة مقدّمة</div></div>
+    <div class="stat-card sc-b"><div class="stat-num">٤</div><div class="stat-label">مراحل دراسية</div></div>
+  </div>
+  <div class="divl"><hr></div>
+  <div class="sec">
+    <div class="sec-head"><span class="sec-tag tag-b">المواد الدراسية</span><h3>اختر مادتك</h3><p>محتوى مصمّم لكل مرحلة</p></div>
+    <div class="subj-grid">
+      <div class="subj-card ph"><div class="s-icon">⚛️</div><h4>الفيزياء</h4><p>الكهرباء · النشاط الإشعاعي · الموجات · البصريات</p><div class="s-tags"><span class="stag">تالتة إعداد</span><span class="stag">تانية إعداد</span></div></div>
+      <div class="subj-card sc"><div class="s-icon">🔬</div><h4>العلوم العامة</h4><p>الوراثة · التكيف · النظام البيئي · الخلية</p><div class="s-tags"><span class="stag">سادسة ابتدائي</span><span class="stag">خامسة ابتدائي</span></div></div>
+      <div class="subj-card ch"><div class="s-icon">🧪</div><h4>الكيمياء والأحياء</h4><p>التفاعلات الكيميائية · سرعة التفاعل · التنظيم الهرموني</p><div class="s-tags"><span class="stag">تالتة إعداد</span></div></div>
+    </div>
+  </div>
+  <div class="divl"><hr></div>
+  <div class="sec">
+    <div class="sec-head"><span class="sec-tag tag-g">مميزات المنصة</span><h3>كل اللي محتاجه</h3></div>
+    <div class="feat-grid">
+      <div class="feat-card"><span class="fi">📊</span><h4>متابعة الدرجات</h4><p>كل طالب يشوف درجاته فور الانتهاء</p></div>
+      <div class="feat-card"><span class="fi">⏱️</span><h4>تايمر مركزي</h4><p>المدرس يتحكم في وقت الامتحان</p></div>
+      <div class="feat-card"><span class="fi">🔒</span><h4>أكواد دخول</h4><p>كل امتحان بكود خاص آمن</p></div>
+      <div class="feat-card"><span class="fi">📤</span><h4>Google Sheets</h4><p>كل البيانات محفوظة في شيت جوجل بتاعك</p></div>
+      <div class="feat-card"><span class="fi">📱</span><h4>يشتغل على المحمول</h4><p>متوافق مع كل الأجهزة</p></div>
+      <div class="feat-card"><span class="fi">🆓</span><h4>مجاني 100%</h4><p>بدون أي رسوم أو اشتراكات</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN ═══ -->
+<div class="page" id="page-login">
+  <div class="login-page">
+    <div class="login-box">
+      <h2>مرحباً بك 👋</h2>
+      <p class="sub">سجّل دخولك للوصول للمحتوى</p>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchMainTab('student',this)">🎓 طالب</button>
+        <button class="tab-btn" onclick="switchMainTab('teacher',this)">👨‍🏫 مدرس</button>
+      </div>
+
+      <!-- STUDENT -->
+      <div id="tab-student">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchStudentTab('login',this)" id="stab-login">دخول</button>
+          <button class="tab-btn" onclick="switchStudentTab('reg',this)" id="stab-reg">تسجيل جديد</button>
+        </div>
+        <div id="sf-login">
+          <div class="fg"><label>البريد الإلكتروني</label><input type="email" id="s-email" placeholder="بريدك الإلكتروني"></div>
+          <div class="fg"><label>كلمة السر</label><input type="password" id="s-pass" placeholder="••••••••"></div>
+          <button class="btn-submit" onclick="studentLogin()">🚀 دخول</button>
+        </div>
+        <div id="sf-reg" style="display:none">
+          <div class="fg"><label>الاسم الكامل</label><input type="text" id="s-name" placeholder="اسمك بالكامل"></div>
+          <div class="fg"><label>الصف الدراسي</label>
+            <select id="s-grade">
+              <option value="">اختر صفك</option>
+              <option>تالتة إعداد</option><option>تانية إعداد</option>
+              <option>أولى إعداد</option><option>سادسة ابتدائي</option><option>خامسة ابتدائي</option>
+            </select>
+          </div>
+          <div class="fg"><label>البريد الإلكتروني</label><input type="email" id="s-remail" placeholder="بريدك الإلكتروني"></div>
+          <div class="fg"><label>كلمة السر</label><input type="password" id="s-rpass" placeholder="على الأقل ٦ أحرف"></div>
+          <button class="btn-submit" onclick="studentRegister()">✨ إنشاء حساب</button>
+        </div>
+        <div class="err" id="s-err"></div>
+      </div>
+
+      <!-- TEACHER -->
+      <div id="tab-teacher" style="display:none">
+        <div class="fg"><label>كلمة سر المدرس</label><input type="password" id="t-pass" placeholder="••••••••"></div>
+        <button class="btn-submit green" onclick="teacherLogin()">🔐 دخول المدرس</button>
+        <div class="err" id="t-err"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STUDENT DASH ═══ -->
+<div class="page" id="page-sdash">
+  <div class="dash-page">
+    <div class="dash-hd">
+      <h2>مرحباً، <span id="s-welcome" class="gp"></span> 👋</h2>
+      <p>هنا تلاقي امتحاناتك ودرجاتك</p>
+    </div>
+    <div class="dash-card">
+      <h3>📝 الامتحانات المتاحة</h3>
+      <div class="exam-list" id="s-exam-list"><p style="color:var(--text-muted);text-align:center;padding:20px">جاري التحميل...</p></div>
+    </div>
+    <div class="dash-card">
+      <h3>📊 درجاتي</h3>
+      <table class="gtable">
+        <thead><tr><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>الوقت</th></tr></thead>
+        <tbody id="s-grades"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EXAM PAGE ═══ -->
+<div class="page" id="page-exam">
+  <div class="exam-pg">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+      <div><h2 id="ex-title" style="font-size:1.5rem;font-weight:800;margin-bottom:4px"></h2><p id="ex-subj" style="color:var(--text-muted);font-size:.88rem"></p></div>
+      <div class="exam-timer-box"><div class="timer-label">الوقت المتبقي</div><div class="timer-val" id="ex-timer">00:00</div></div>
+    </div>
+    <div id="ex-questions"></div>
+    <button class="btn-p" onclick="submitExam()" style="margin-top:24px;width:100%;justify-content:center;font-size:1rem;padding:16px">✅ تسليم الامتحان</button>
+  </div>
+</div>
+
+<!-- ═══ PUBLIC EXAMS ═══ -->
+<div class="page" id="page-exams">
+  <div class="dash-page">
+    <div class="dash-hd"><h2>📝 الامتحانات المتاحة</h2><p>سجّل دخولك لتقديم الامتحان</p></div>
+    <div class="exam-list" id="pub-exam-list"><p style="color:var(--text-muted);text-align:center;padding:40px">جاري التحميل...</p></div>
+  </div>
+</div>
+
+<!-- ═══ TEACHER DASH ═══ -->
+<div class="page" id="page-tdash">
+  <div class="t-grid">
+    <div class="t-sidebar">
+      <div class="sb-title">لوحة التحكم</div>
+      <button class="sb-btn active" onclick="showPanel('overview')" id="sb-overview">📊 نظرة عامة</button>
+      <button class="sb-btn" onclick="showPanel('create')" id="sb-create">➕ إنشاء امتحان</button>
+      <button class="sb-btn" onclick="showPanel('exlist')" id="sb-exlist">📋 الامتحانات</button>
+      <button class="sb-btn" onclick="showPanel('students')" id="sb-students">👥 الطلاب</button>
+      <button class="sb-btn" onclick="showPanel('grades')" id="sb-grades">🏆 الدرجات</button>
+    </div>
+    <div class="t-main">
+
+      <!-- OVERVIEW -->
+      <div class="panel active" id="panel-overview">
+        <div class="panel-title">📊 نظرة عامة</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px">
+          <div class="stat-card sc-b"><div class="stat-num" id="t-st-s">٠</div><div class="stat-label">الطلاب</div></div>
+          <div class="stat-card sc-g"><div class="stat-num" id="t-st-e">٠</div><div class="stat-label">الامتحانات</div></div>
+          <div class="stat-card sc-o"><div class="stat-num" id="t-st-g">٠</div><div class="stat-label">الإجابات</div></div>
+        </div>
+        <div class="dash-card">
+          <h3>📋 آخر الإجابات</h3>
+          <table class="stable" style="margin-top:12px">
+            <thead><tr><th>الطالب</th><th>الامتحان</th><th>الدرجة</th><th>الوقت</th></tr></thead>
+            <tbody id="t-recent"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CREATE EXAM -->
+      <div class="panel" id="panel-create">
+        <div class="panel-title">➕ إنشاء امتحان جديد</div>
+        <div class="dash-card">
+          <div class="f-row">
+            <div class="f-field"><label>اسم الامتحان</label><input type="text" id="ex-name" placeholder="مثال: كويز التيار الكهربي"></div>
+            <div class="f-field"><label>المادة</label><select id="ex-subject"><option>الفيزياء</option><option>العلوم</option><option>الكيمياء</option><option>الأحياء</option></select></div>
+          </div>
+          <div class="f-row">
+            <div class="f-field"><label>الصف</label><select id="ex-grade"><option>تالتة إعداد</option><option>تانية إعداد</option><option>أولى إعداد</option><option>سادسة ابتدائي</option><option>خامسة ابتدائي</option></select></div>
+            <div class="f-field"><label>المدة (دقائق)</label><input type="number" id="ex-dur" value="10" min="1" max="120"></div>
+          </div>
+          <div class="f-field"><label>كود الدخول (اختياري)</label><input type="text" id="ex-code" placeholder="مثال: PHY2025"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 14px">
+            <span style="font-weight:700">الأسئلة</span>
+            <button class="btn-p" onclick="addQ()" style="padding:8px 16px;font-size:.82rem">+ سؤال</button>
+          </div>
+          <div id="q-container"></div>
+          <button class="btn-p" onclick="saveExam()" style="width:100%;justify-content:center;padding:14px;font-size:.95rem;margin-top:8px">💾 حفظ الامتحان</button>
+        </div>
+      </div>
+
+      <!-- EXAMS LIST -->
+      <div class="panel" id="panel-exlist">
+        <div class="panel-title">📋 الامتحانات</div>
+        <div id="t-exams-list"></div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div class="panel" id="panel-students">
+        <div class="panel-title">👥 الطلاب المسجّلين</div>
+        <input class="search-bar" type="text" id="s-search" placeholder="🔍 ابحث باسم الطالب..." oninput="filterStudents()">
+        <table class="stable">
+          <thead><tr><th>الاسم</th><th>الصف</th><th>البريد</th></tr></thead>
+          <tbody id="t-students-body"></tbody>
+        </table>
+      </div>
+
+      <!-- GRADES -->
+      <div class="panel" id="panel-grades">
+        <div class="panel-title">🏆 الدرجات</div>
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="btn-p" onclick="exportCSV()" style="padding:10px 20px;font-size:.85rem">📤 تصدير CSV</button>
+        </div>
+        <table class="stable">
+          <thead><tr><th>الطالب</th><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>النسبة</th><th>الوقت</th></tr></thead>
+          <tbody id="t-grades-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbw46NUcIhD2LjoBWzV-sC9aXpJkP84YexYSevRZT-hN9MLXOePZoBRw1l92mpOTfTZb/exec';
+const TEACHER_PASS = 'mostafa2025'; // ← غيّر كلمة سر المدرس دي
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let currentUser = null; // {name, grade, email, role}
+let currentExam = null;
+let examTimer = null;
+let qCount = 0;
+let allStudents = [];
+let allGrades = [];
+let allExams = [];
+
+// ══════════════════════════════════════
+// API
+// ══════════════════════════════════════
+async function api(data) {
+  try {
+    const res = await fetch(SHEET_URL, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  } catch(e) {
+    // CORS fallback - use GET with params
+    try {
+      const res = await fetch(SHEET_URL + '?data=' + encodeURIComponent(JSON.stringify(data)));
+      return await res.json();
+    } catch(e2) {
+      return null;
+    }
+  }
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+window.onload = async () => {
+  initBG();
+  const saved = localStorage.getItem('msUser');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    updateNav();
+    if (currentUser.role === 'teacher') {
+      await loadTeacherData();
+    } else {
+      document.getElementById('s-welcome').textContent = currentUser.name;
+      await loadStudentExams();
+      await loadStudentGrades();
+    }
+  }
+  await loadStats();
+  await loadPublicExams();
+  hideLoad();
+};
+
+// ══════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════
+window.studentLogin = async () => {
+  const email = document.getElementById('s-email').value.trim();
+  const pass = document.getElementById('s-pass').value;
+  if (!email || !pass) { setErr('s-err','اكمل البيانات'); return; }
+  showLoad();
+  const res = await api({type:'login', email, password:pass});
+  hideLoad();
+  if (res && res.success) {
+    currentUser = {name:res.name, grade:res.grade, email, role:'student'};
+    localStorage.setItem('msUser', JSON.stringify(currentUser));
+    updateNav();
+    document.getElementById('s-welcome').textContent = res.name;
+    await loadStudentExams();
+    await loadStudentGrades();
+    goPage('sdash');
+    toast('أهلاً ' + res.name + '! ✨');
+  } else {
+    setErr('s-err', 'خطأ في البريد أو كلمة السر');
+  }
+};
+
+window.studentRegister = async () => {
+  const name = document.getElementById('s-name').value.trim();
+  const grade = document.getElementById('s-grade').value;
+  const email = document.getElementById('s-remail').value.trim();
+  const pass = document.getElementById('s-rpass').value;
+  if (!name||!grade||!email||!pass) { setErr('s-err','اكمل كل البيانات'); return; }
+  if (pass.length < 6) { setErr('s-err','كلمة السر على الأقل ٦ أحرف'); return; }
+  showLoad();
+  await api({type:'student', name, grade, email, password:pass});
+  hideLoad();
+  currentUser = {name, grade, email, role:'student'};
+  localStorage.setItem('msUser', JSON.stringify(currentUser));
+  updateNav();
+  document.getElementById('s-welcome').textContent = name;
+  await loadStudentExams();
+  goPage('sdash');
+  toast('تم إنشاء حسابك بنجاح 🎉');
+  await loadStats();
+};
+
+window.teacherLogin = () => {
+  const pass = document.getElementById('t-pass').value;
+  if (pass === TEACHER_PASS) {
+    currentUser = {name:'مستر مصطفى', role:'teacher'};
+    localStorage.setItem('msUser', JSON.stringify(currentUser));
+    updateNav();
+    loadTeacherData();
+    goPage('tdash');
+    toast('أهلاً مستر مصطفى 👨‍🏫');
+  } else {
+    setErr('t-err','كلمة السر غلط');
+  }
+};
+
+window.doLogout = () => {
+  currentUser = null;
+  localStorage.removeItem('msUser');
+  updateNav();
+  goPage('home');
+  toast('تم تسجيل الخروج');
+};
+
+function updateNav() {
+  const loggedIn = !!currentUser;
+  document.getElementById('nb-login').style.display = loggedIn ? 'none' : '';
+  document.getElementById('nav-user').style.display = loggedIn ? 'flex' : 'none';
+  if (loggedIn) {
+    document.getElementById('nav-uname').textContent = currentUser.role === 'teacher' ? '👨‍🏫 المدرس' : '🎓 ' + currentUser.name;
+    document.getElementById('nb-sdash').style.display = currentUser.role === 'student' ? '' : 'none';
+    document.getElementById('nb-tdash').style.display = currentUser.role === 'teacher' ? '' : 'none';
+  } else {
+    document.getElementById('nb-sdash').style.display = 'none';
+    document.getElementById('nb-tdash').style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════
+// STATS
+// ══════════════════════════════════════
+async function loadStats() {
+  const [students, exams, grades] = await Promise.all([
+    api({type:'getStudents'}),
+    api({type:'getExams'}),
+    api({type:'getGrades'})
+  ]);
+  const sc = Array.isArray(students) ? students.length : 0;
+  const ec = Array.isArray(exams) ? exams.length : 0;
+  const gc = Array.isArray(grades) ? grades.length : 0;
+  document.getElementById('st-students').textContent = toAr(sc);
+  document.getElementById('st-exams').textContent = toAr(ec);
+  document.getElementById('st-grades').textContent = toAr(gc);
+}
+
+// ══════════════════════════════════════
+// EXAMS
+// ══════════════════════════════════════
+async function loadPublicExams() {
+  const list = document.getElementById('pub-exam-list');
+  const exams = await api({type:'getExams'});
+  allExams = Array.isArray(exams) ? exams : [];
+  if (allExams.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">لا يوجد امتحانات حالياً</p>'; return; }
+  list.innerHTML = allExams.map(ex => `
+    <div class="exam-item">
+      <div class="e-icon">📝</div>
+      <div class="e-info"><h4>${ex.title}</h4><p>${ex.subject} · ${ex.grade} · ${ex.duration} دقيقة</p></div>
+      <button class="btn-p" onclick="startExam(${ex.id})" style="padding:8px 18px;font-size:.82rem">ابدأ ⚡</button>
+    </div>`).join('');
+}
+
+async function loadStudentExams() {
+  const list = document.getElementById('s-exam-list');
+  const exams = await api({type:'getExams'});
+  allExams = Array.isArray(exams) ? exams : [];
+  if (allExams.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">لا يوجد امتحانات حالياً</p>'; return; }
+  list.innerHTML = allExams.map(ex => `
+    <div class="exam-item">
+      <div class="e-icon">📝</div>
+      <div class="e-info"><h4>${ex.title}</h4><p>${ex.subject} · ${ex.grade} · ${ex.duration} دقيقة</p></div>
+      <button class="btn-p" onclick="startExam(${ex.id})" style="padding:8px 18px;font-size:.82rem">ابدأ ⚡</button>
+    </div>`).join('');
+}
+
+window.startExam = async (examId) => {
+  if (!currentUser) { goPage('login'); toast('سجّل دخولك أولاً',true); return; }
+  const exam = allExams.find(e => e.id == examId);
+  if (!exam) { toast('الامتحان مش موجود',true); return; }
+  if (exam.code) {
+    const entered = prompt('🔒 أدخل كود الدخول:');
+    if (entered !== exam.code) { toast('كود غلط!',true); return; }
+  }
+  currentExam = exam;
+  document.getElementById('ex-title').textContent = exam.title;
+  document.getElementById('ex-subj').textContent = exam.subject + ' · ' + exam.grade;
+  renderExamQs(exam.questions);
+  startTimer(exam.duration * 60);
+  goPage('exam');
+};
+
+function renderExamQs(questions) {
+  document.getElementById('ex-questions').innerHTML = questions.map((q,i) => `
+    <div class="q-card">
+      <div class="q-text">${i+1}. ${q.text}</div>
+      <div class="opts-grid">
+        ${q.options.map((o,oi) => `
+          <label class="opt-label">
+            <input type="radio" name="q${i}" value="${oi}"> ${o}
+          </label>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function startTimer(secs) {
+  clearInterval(examTimer);
+  let rem = secs;
+  const el = document.getElementById('ex-timer');
+  examTimer = setInterval(() => {
+    rem--;
+    const m = String(Math.floor(rem/60)).padStart(2,'0');
+    const s = String(rem%60).padStart(2,'0');
+    el.textContent = m+':'+s;
+    if (rem <= 60) el.style.color = 'var(--atom)';
+    if (rem <= 0) { clearInterval(examTimer); submitExam(); }
+  }, 1000);
+}
+
+window.submitExam = async () => {
+  clearInterval(examTimer);
+  if (!currentExam) return;
+  const qs = currentExam.questions;
+  let score = 0;
+  qs.forEach((q,i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    if (sel && parseInt(sel.value) === q.correct) score++;
+  });
+  const total = qs.length;
+  const pct = Math.round(score/total*100);
+  showLoad();
+  await api({
+    type:'submission',
+    userName: currentUser.name,
+    examTitle: currentExam.title,
+    subject: currentExam.subject,
+    score, total, percentage: pct
+  });
+  hideLoad();
+  currentExam = null;
+  goPage('sdash');
+  await loadStudentGrades();
+  await loadStats();
+  toast(`🏆 درجتك: ${score}/${total} (${pct}%)`);
+};
+
+// ══════════════════════════════════════
+// STUDENT GRADES
+// ══════════════════════════════════════
+async function loadStudentGrades() {
+  const tbody = document.getElementById('s-grades');
+  const grades = await api({type:'getGrades'});
+  if (!Array.isArray(grades) || grades.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">لم تقدّم امتحانات بعد</td></tr>';
+    return;
+  }
+  const myGrades = grades.filter(g => g.userName === currentUser.name);
+  if (myGrades.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">لم تقدّم امتحانات بعد</td></tr>'; return; }
+  tbody.innerHTML = myGrades.map(g => {
+    const pct = parseInt(g.percentage);
+    const cls = pct >= 80 ? 'ga' : pct >= 60 ? 'gb2' : 'gc';
+    return `<tr><td>${g.examTitle}</td><td>${g.subject}</td><td><span class="gb ${cls}">${g.score}/${g.total} (${g.percentage})</span></td><td style="font-size:.78rem;color:var(--text-muted)">${g.time||'—'}</td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// TEACHER DATA
+// ══════════════════════════════════════
+async function loadTeacherData() {
+  showLoad();
+  const [students, exams, grades] = await Promise.all([
+    api({type:'getStudents'}),
+    api({type:'getExams'}),
+    api({type:'getGrades'})
+  ]);
+  hideLoad();
+  allStudents = Array.isArray(students) ? students : [];
+  allExams = Array.isArray(exams) ? exams : [];
+  allGrades = Array.isArray(grades) ? grades : [];
+
+  // Stats
+  document.getElementById('t-st-s').textContent = toAr(allStudents.length);
+  document.getElementById('t-st-e').textContent = toAr(allExams.length);
+  document.getElementById('t-st-g').textContent = toAr(allGrades.length);
+
+  // Recent
+  const tbody = document.getElementById('t-recent');
+  if (allGrades.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px">لا يوجد إجابات بعد</td></tr>'; }
+  else tbody.innerHTML = allGrades.slice(0,10).map(g => {
+    const pct = parseInt(g.percentage);
+    const cls = pct >= 80 ? 'ga' : pct >= 60 ? 'gb2' : 'gc';
+    return `<tr><td>${g.userName}</td><td>${g.examTitle}</td><td><span class="gb ${cls}">${g.score}/${g.total}</span></td><td style="font-size:.78rem;color:var(--text-muted)">${g.time||'—'}</td></tr>`;
+  }).join('');
+
+  // Exams list
+  const el = document.getElementById('t-exams-list');
+  if (allExams.length === 0) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">لا يوجد امتحانات بعد</p>'; }
+  else el.innerHTML = allExams.map(ex => `
+    <div class="exam-item" style="margin-bottom:12px">
+      <div class="e-icon">📝</div>
+      <div class="e-info"><h4>${ex.title}</h4><p>${ex.subject} · ${ex.grade} · ${ex.questions?.length||0} سؤال · ${ex.duration} دقيقة${ex.code?' · كود: '+ex.code:''}</p></div>
+    </div>`).join('');
+
+  // Students
+  renderStudents(allStudents);
+
+  // Grades
+  renderGrades(allGrades);
+}
+
+function renderStudents(list) {
+  const tbody = document.getElementById('t-students-body');
+  if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">لا يوجد طلاب بعد</td></tr>'; return; }
+  tbody.innerHTML = list.map(s => `<tr><td>${s.name||'—'}</td><td>${s.grade||'—'}</td><td style="font-size:.8rem;color:var(--text-muted)">${s.email||'—'}</td></tr>`).join('');
+}
+
+window.filterStudents = () => {
+  const q = document.getElementById('s-search').value.toLowerCase();
+  renderStudents(allStudents.filter(s => (s.name||'').toLowerCase().includes(q)));
+};
+
+function renderGrades(list) {
+  const tbody = document.getElementById('t-grades-body');
+  if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">لا يوجد درجات بعد</td></tr>'; return; }
+  tbody.innerHTML = list.map(g => {
+    const pct = parseInt(g.percentage);
+    const cls = pct >= 80 ? 'ga' : pct >= 60 ? 'gb2' : 'gc';
+    return `<tr><td>${g.userName}</td><td>${g.examTitle}</td><td>${g.subject}</td><td><span class="gb ${cls}">${g.score}/${g.total}</span></td><td>${g.percentage}</td><td style="font-size:.78rem;color:var(--text-muted)">${g.time||'—'}</td></tr>`;
+  }).join('');
+}
+
+window.exportCSV = () => {
+  if (allGrades.length === 0) { toast('لا يوجد درجات للتصدير',true); return; }
+  const rows = [['الطالب','الامتحان','المادة','الدرجة','من','النسبة','الوقت']];
+  allGrades.forEach(g => rows.push([g.userName,g.examTitle,g.subject,g.score,g.total,g.percentage,g.time||'']));
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='درجات.csv'; a.click();
+  toast('تم تصدير الدرجات 📤');
+};
+
+// ══════════════════════════════════════
+// CREATE EXAM
+// ══════════════════════════════════════
+window.addQ = () => {
+  qCount++;
+  const d = document.createElement('div');
+  d.className = 'q-builder'; d.id = 'qb-'+qCount;
+  d.innerHTML = `
+    <div class="q-head"><span class="q-num">سؤال ${qCount}</span><button class="btn-rm" onclick="document.getElementById('qb-${qCount}').remove()">حذف</button></div>
+    <div class="f-field"><label>نص السؤال</label><input type="text" placeholder="اكتب السؤال هنا..."></div>
+    <div class="opts-build">
+      <div class="ob"><input type="radio" name="c${qCount}" value="0"><input type="text" placeholder="الإجابة أ"></div>
+      <div class="ob"><input type="radio" name="c${qCount}" value="1"><input type="text" placeholder="الإجابة ب"></div>
+      <div class="ob"><input type="radio" name="c${qCount}" value="2"><input type="text" placeholder="الإجابة ج"></div>
+      <div class="ob"><input type="radio" name="c${qCount}" value="3"><input type="text" placeholder="الإجابة د"></div>
+    </div>
+    <p style="font-size:.72rem;color:var(--text-muted);margin-top:8px">🟢 اضغط الدايرة جنب الإجابة الصحيحة</p>`;
+  document.getElementById('q-container').appendChild(d);
+};
+
+window.saveExam = async () => {
+  const title = document.getElementById('ex-name').value.trim();
+  const subject = document.getElementById('ex-subject').value;
+  const grade = document.getElementById('ex-grade').value;
+  const duration = parseInt(document.getElementById('ex-dur').value);
+  const code = document.getElementById('ex-code').value.trim();
+  if (!title) { toast('اكتب اسم الامتحان',true); return; }
+  const builders = document.querySelectorAll('.q-builder');
+  if (builders.length === 0) { toast('أضف سؤال واحد على الأقل',true); return; }
+  const questions = [];
+  let valid = true;
+  builders.forEach(b => {
+    const text = b.querySelector('input[type=text]').value.trim();
+    const opts = [...b.querySelectorAll('.ob input[type=text]')].map(i=>i.value.trim());
+    const cor = b.querySelector('input[type=radio]:checked');
+    if (!text||opts.some(o=>!o)||!cor) { valid=false; return; }
+    questions.push({text, options:opts, correct:parseInt(cor.value)});
+  });
+  if (!valid) { toast('اكمل كل الأسئلة واختر الإجابة الصحيحة',true); return; }
+  showLoad();
+  await api({type:'exam', title, subject, grade, duration, code:code||'', questions});
+  hideLoad();
+  document.getElementById('ex-name').value='';
+  document.getElementById('ex-code').value='';
+  document.getElementById('q-container').innerHTML='';
+  qCount=0;
+  toast('تم حفظ الامتحان 🎉');
+  await loadTeacherData();
+  showPanel('exlist');
+};
+
+// ══════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════
+window.goPage = (name) => {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.remove('active'));
+  const map = {home:'nb-home',exams:'nb-exams',sdash:'nb-sdash',tdash:'nb-tdash'};
+  if (map[name]) document.getElementById(map[name])?.classList.add('active');
+  if (name==='exams') loadPublicExams();
+  window.scrollTo(0,0);
+};
+
+window.showPanel = (name) => {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name)?.classList.add('active');
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sb-'+name)?.classList.add('active');
+};
+
+window.switchMainTab = (tab, btn) => {
+  document.querySelectorAll('.tabs:first-of-type .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-student').style.display = tab==='student'?'':'none';
+  document.getElementById('tab-teacher').style.display = tab==='teacher'?'':'none';
+};
+
+window.switchStudentTab = (tab, btn) => {
+  document.getElementById('stab-login').classList.toggle('active', tab==='login');
+  document.getElementById('stab-reg').classList.toggle('active', tab==='reg');
+  document.getElementById('sf-login').style.display = tab==='login'?'':'none';
+  document.getElementById('sf-reg').style.display = tab==='reg'?'':'none';
+  document.getElementById('s-err').textContent='';
+};
+
+function setErr(id, msg) { document.getElementById(id).textContent = msg; }
+function showLoad() { document.getElementById('loading').classList.remove('hidden'); }
+function hideLoad() { document.getElementById('loading').classList.add('hidden'); }
+function toast(msg, isErr=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(isErr?' err':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+function toAr(n) { return n.toString().replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]); }
+
+// ══════════════════════════════════════
+// BG CANVAS
+// ══════════════════════════════════════
+function initBG() {
+  const canvas=document.getElementById('bg-canvas');
+  const ctx=canvas.getContext('2d');
+  function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}
+  resize(); window.addEventListener('resize',resize);
+  const pts=Array.from({length:55},()=>({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    r:Math.random()*2+.4, dx:(Math.random()-.5)*.35, dy:(Math.random()-.5)*.35,
+    c:['rgba(0,212,255,','rgba(57,211,83,','rgba(255,107,53,'][Math.floor(Math.random()*3)],
+    o:Math.random()*.4+.1
+  }));
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){ctx.beginPath();ctx.strokeStyle=`rgba(0,212,255,${.05*(1-d/120)})`;ctx.lineWidth=.5;ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();}
+    }
+    pts.forEach(p=>{
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c+p.o+')';ctx.fill();
+      p.x+=p.dx;p.y+=p.dy;
+      if(p.x<0||p.x>canvas.width)p.dx*=-1;
+      if(p.y<0||p.y>canvas.height)p.dy*=-1;
+    });
+    requestAnimationFrame(draw);
+  })();
+}
+</script>
+</body>
+</html>
