@@ -275,7 +275,7 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(5,13,26,.93);bac
       <div class="stage-card s2" onclick="goPage('exams')">
         <span class="stage-icon">⚛️</span><h4>المرحلة الإعدادية</h4>
         <p>فيزياء وكيمياء وأحياء وفق المنهج</p>
-        <div class="stage-levels"><span class="slevel">أولى إعداد</span><span class="slevel">تانية إعداد</span><span class="slevel">تالتة إعداد</span></div>
+        <div class="stage-levels"><span class="slevel">أولى إعدادي</span><span class="slevel">تانية إعدادي</span><span class="slevel">تالتة إعدادي</span></div>
       </div>
       <div class="stage-card s3" onclick="goPage('exams')">
         <span class="stage-icon">🧪</span><h4>المرحلة الثانوية</h4>
@@ -481,7 +481,7 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(5,13,26,.93);bac
 <script>
 const SHEET_URL='https://script.google.com/macros/s/AKfycbw46NUcIhD2LjoBWzV-sC9aXpJkP84YexYSevRZT-hN9MLXOePZoBRw1l92mpOTfTZb/exec';
 const TEACHER_PASS='mostafa2025';
-const GRADES_MAP={'ابتدائي':['رابعة ابتدائي','خامسة ابتدائي','سادسة ابتدائي'],'إعدادي':['أولى إعداد','تانية إعداد','تالتة إعداد'],'ثانوي':['أولى ثانوي','تانية ثانوي','تالتة ثانوي']};
+const GRADES_MAP={'ابتدائي':['رابعة ابتدائي','خامسة ابتدائي','سادسة ابتدائي'],'إعدادي':['أولى إعدادي','تانية إعدادي','تالتة إعدادي'],'ثانوي':['أولى ثانوي','تانية ثانوي','تالتة ثانوي']};
 let currentUser=null,currentExam=null,examTimerInt=null,qCount=0;
 let allStudents=[],allGrades=[],allExams=[];
 let sChartInst=null;
@@ -892,6 +892,144 @@ function showLoad(){document.getElementById('loading').classList.remove('hidden'
 function hideLoad(){document.getElementById('loading').classList.add('hidden');}
 function toast(msg,isErr=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';setTimeout(()=>t.classList.remove('show'),3500);}
 function toAr(n){return n.toString().replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);}
+
+// ══════════════════════
+// NOTIFICATIONS SYSTEM
+// ══════════════════════
+let notifications = JSON.parse(localStorage.getItem('ms_notifs') || '[]');
+
+function addNotif(type, title, body, icon) {
+  icon = icon || '🔔';
+  var notif = {id: Date.now(), type: type, title: title, body: body, icon: icon, time: new Date().toLocaleString('ar-EG'), read: false};
+  notifications.unshift(notif);
+  if (notifications.length > 50) notifications = notifications.slice(0, 50);
+  localStorage.setItem('ms_notifs', JSON.stringify(notifications));
+  updateNotifBadge();
+  showNotifPopup(notif);
+  playNotifSound();
+}
+
+function updateNotifBadge() {
+  var unread = notifications.filter(function(n){return !n.read;}).length;
+  var badge = document.getElementById('notif-badge');
+  var btn = document.getElementById('notif-btn');
+  if (badge) { badge.textContent = unread > 0 ? unread : ''; badge.style.display = unread > 0 ? 'flex' : 'none'; }
+  if (btn) btn.style.color = unread > 0 ? 'var(--physics)' : 'var(--text-muted)';
+}
+
+function showNotifPopup(notif) {
+  var popup = document.createElement('div');
+  popup.style.cssText = 'position:fixed;bottom:80px;right:28px;z-index:998;background:var(--card-bg);border:1px solid rgba(0,212,255,.3);border-radius:14px;padding:14px 18px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.4);transition:opacity .3s;';
+  popup.innerHTML = '<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:1.5rem">'+notif.icon+'</span><div><div style="font-weight:700;font-size:.88rem;margin-bottom:3px">'+notif.title+'</div><div style="font-size:.78rem;color:var(--text-muted)">'+notif.body+'</div></div><button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;margin-right:auto">&#10005;</button></div>';
+  document.body.appendChild(popup);
+  setTimeout(function(){ popup.style.opacity='0'; setTimeout(function(){popup.remove();},300); }, 4000);
+}
+
+function playNotifSound() {
+  try {
+    var ctx2 = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx2.createOscillator(); var gain = ctx2.createGain();
+    osc.connect(gain); gain.connect(ctx2.destination);
+    osc.frequency.setValueAtTime(800, ctx2.currentTime);
+    osc.frequency.setValueAtTime(1000, ctx2.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.2, ctx2.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx2.currentTime + 0.3);
+    osc.start(ctx2.currentTime); osc.stop(ctx2.currentTime + 0.3);
+  } catch(e) {}
+}
+
+window.toggleNotifPanel = function() {
+  var panel = document.getElementById('notif-panel');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    notifications.forEach(function(n){n.read=true;});
+    localStorage.setItem('ms_notifs', JSON.stringify(notifications));
+    updateNotifBadge();
+    renderNotifList();
+  }
+};
+
+function renderNotifList() {
+  var list = document.getElementById('notif-list');
+  if (!list) return;
+  if (!notifications.length) { list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:30px;font-size:.88rem">لا يوجد إشعارات بعد</p>'; return; }
+  list.innerHTML = notifications.map(function(n){
+    return '<div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:10px;align-items:flex-start"><span style="font-size:1.3rem">'+n.icon+'</span><div style="flex:1"><div style="font-weight:700;font-size:.85rem;margin-bottom:2px">'+n.title+'</div><div style="font-size:.78rem;color:var(--text-muted);margin-bottom:3px">'+n.body+'</div><div style="font-size:.72rem;color:rgba(122,154,191,.5)">'+n.time+'</div></div></div>';
+  }).join('');
+}
+
+window.clearNotifs = function() {
+  notifications = [];
+  localStorage.setItem('ms_notifs', JSON.stringify(notifications));
+  updateNotifBadge();
+  renderNotifList();
+};
+
+// إضافة إشعارات على الأحداث المهمة
+var _origSaveExam = window.saveExam;
+window.saveExam = async function() {
+  await _origSaveExam();
+  addNotif('exam', 'امتحان جديد تم إنشاؤه ✅', 'تم حفظ الامتحان بنجاح في المنصة', '📋');
+};
+
+var _origStudentRegister = window.studentRegister;
+window.studentRegister = async function() {
+  await _origStudentRegister();
+  if (currentUser && currentUser.role === 'student') {
+    addNotif('welcome', 'أهلاً بك! 🎉', 'تم إنشاء حسابك في منصة مستر مصطفى', '🎓');
+  }
+};
+
+var _origSubmitExam = window.submitExam;
+window.submitExam = async function() {
+  await _origSubmitExam();
+  addNotif('done', 'تم تسليم الامتحان ✅', 'شوف درجتك في لوحتك الشخصية', '📝');
+};
+
+// إضافة CSS الإشعارات
+var notifCSS = document.createElement('style');
+notifCSS.textContent = '#notif-panel{position:fixed;top:64px;left:0;width:320px;max-height:480px;background:var(--card-bg);border:1px solid var(--card-border);border-left:none;border-radius:0 0 16px 0;z-index:99;box-shadow:0 8px 32px rgba(0,0,0,.4);overflow:hidden;} #notif-panel-head{padding:14px 16px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between;} #notif-panel-head h4{font-size:.92rem;font-weight:700;} #notif-list{max-height:380px;overflow-y:auto;} #notif-btn{position:relative;cursor:pointer;font-size:1.2rem;color:var(--text-muted);transition:.3s;padding:6px 10px;border-radius:8px;display:flex;align-items:center;} #notif-btn:hover{background:rgba(0,212,255,.08);color:var(--physics);} #notif-badge{position:absolute;top:2px;right:2px;background:var(--atom);color:#fff;font-size:.6rem;font-weight:800;width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;}';
+document.head.appendChild(notifCSS);
+
+// إنشاء زرار وبانيل الإشعارات بعد تحميل الصفحة
+setTimeout(function() {
+  var nav = document.querySelector('nav');
+  if (!nav) return;
+
+  // زرار الإشعارات
+  var notifBtn = document.createElement('div');
+  notifBtn.id = 'notif-btn';
+  notifBtn.innerHTML = '🔔<span id="notif-badge"></span>';
+  notifBtn.onclick = window.toggleNotifPanel;
+  var loginBtn = document.getElementById('nb-login');
+  nav.insertBefore(notifBtn, loginBtn);
+
+  // بانيل الإشعارات
+  var panel = document.createElement('div');
+  panel.id = 'notif-panel';
+  panel.style.display = 'none';
+  panel.innerHTML = '<div id="notif-panel-head"><h4>🔔 الإشعارات</h4><div style="display:flex;gap:8px"><button onclick="clearNotifs()" style="background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);color:var(--atom);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:Cairo,sans-serif;font-size:.75rem">مسح الكل</button><button onclick="toggleNotifPanel()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">&#10005;</button></div></div><div id="notif-list"></div>';
+  document.body.appendChild(panel);
+
+  // إغلاق البانيل لما تضغط برا
+  document.addEventListener('click', function(e) {
+    var p = document.getElementById('notif-panel');
+    var b = document.getElementById('notif-btn');
+    if (p && b && !p.contains(e.target) && !b.contains(e.target)) p.style.display = 'none';
+  });
+
+  updateNotifBadge();
+
+  // إشعار ترحيب لو المستخدم مسجّل
+  var saved = localStorage.getItem('msUser');
+  if (saved) {
+    var u = JSON.parse(saved);
+    addNotif('login', 'أهلاً بعودتك! 👋', 'مرحباً '+u.name+' في منصة مستر مصطفى', '✨');
+  }
+}, 600);
+
 
 function initBG(){
   const canvas=document.getElementById('bg-canvas');const ctx=canvas.getContext('2d');
