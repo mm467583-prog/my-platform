@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة مستر مصطفى السايس</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{--physics:#00d4ff;--science:#39d353;--atom:#ff6b35;--gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;--dark-bg:#040c18;--card-bg:#08132a;--card-border:#0d1e3a;--text-main:#e8f4ff;--text-muted:#6a8aaf;--glow-p:rgba(0,212,255,.18);--glow-s:rgba(57,211,83,.18);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--dark-bg);color:var(--text-main);overflow-x:hidden;}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.page{display:none;position:relative;z-index:1;min-height:100vh;}
+.page.active{display:block;}
+
+/* ===== NAV ===== */
+nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,212,255,.12);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:66px;box-shadow:0 4px 30px rgba(0,0,0,.4);}
+.nav-logo{display:flex;align-items:center;gap:12px;cursor:pointer;}
+.nav-logo svg{animation:spin 10s linear infinite;filter:drop-shadow(0 0 8px rgba(0,212,255,.4));}
+@keyframes spin{to{transform:rotate(360deg);}}
+.nav-logo h1{font-size:.95rem;font-weight:800;line-height:1.2;}
+.nav-logo h1 span{display:block;font-size:.67rem;color:var(--text-muted);font-weight:400;letter-spacing:.5px;}
+.nav-links{display:flex;gap:2px;list-style:none;align-items:center;}
+.nav-links button{background:none;border:none;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:.83rem;padding:7px 13px;border-radius:9px;cursor:pointer;transition:all .25s;}
+.nav-links button:hover,.nav-links button.active{color:var(--physics);background:rgba(0,212,255,.1);}
+.btn-nl{background:linear-gradient(135deg,var(--physics),#0099cc)!important;color:#000!important;font-weight:800!important;border-radius:25px!important;padding:7px 20px!important;box-shadow:0 0 18px rgba(0,212,255,.3)!important;}
+#nav-user{display:none;align-items:center;gap:10px;}
+#nav-uname{font-size:.83rem;color:var(--physics);font-weight:700;background:rgba(0,212,255,.08);padding:5px 14px;border-radius:20px;border:1px solid rgba(0,212,255,.2);}
+.btn-lo{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);color:var(--atom);font-family:'Cairo',sans-serif;font-size:.77rem;padding:5px 13px;border-radius:20px;cursor:pointer;transition:.2s;}
+.btn-lo:hover{background:rgba(255,107,53,.2);}
+
+/* Mobile Nav */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(4,12,24,.97);backdrop-filter:blur(20px);border-top:1px solid rgba(0,212,255,.1);padding:8px 0 max(8px,env(safe-area-inset-bottom));flex-direction:row;justify-content:space-around;}
+.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:.6rem;cursor:pointer;padding:4px 8px;border-radius:10px;transition:.2s;min-width:48px;flex:1;}
+.mob-nav-btn .mnb-icon{font-size:1.25rem;line-height:1;}
+.mob-nav-btn.active,.mob-nav-btn:hover{color:var(--physics);}
+.mob-nav-btn.active .mnb-icon{filter:drop-shadow(0 0 6px var(--physics));}
+.mob-nav-btn.logout-btn{color:var(--atom);}
+.mob-nav-btn.logout-btn:hover{color:#ff4444;}
+
+/* Mobile user bar */
+.mob-user-bar{display:none;position:fixed;top:66px;left:0;right:0;z-index:90;background:rgba(4,12,24,.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,212,255,.1);padding:8px 16px;align-items:center;justify-content:space-between;font-size:.82rem;}
+.mob-user-bar.visible{display:flex;}
+.mob-uname{color:var(--physics);font-weight:700;}
+.mob-logout{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);color:var(--atom);font-family:'Cairo',sans-serif;font-size:.75rem;padding:5px 14px;border-radius:20px;cursor:pointer;}
+
+/* ===== BUTTONS ===== */
+.btn-p{background:linear-gradient(135deg,var(--physics),#007aaa);color:#000;font-weight:800;padding:12px 28px;border-radius:50px;border:none;cursor:pointer;font-size:.9rem;font-family:'Cairo',sans-serif;transition:all .3s;box-shadow:0 0 24px rgba(0,212,255,.3);display:inline-flex;align-items:center;gap:7px;}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 4px 40px rgba(0,212,255,.55);}
+.btn-s{background:rgba(57,211,83,.1);color:var(--science);font-weight:700;padding:12px 28px;border-radius:50px;border:1px solid rgba(57,211,83,.4);cursor:pointer;font-size:.9rem;font-family:'Cairo',sans-serif;transition:all .3s;display:inline-flex;align-items:center;gap:7px;}
+.btn-s:hover{background:rgba(57,211,83,.2);transform:translateY(-2px);}
+.btn-o{background:rgba(255,107,53,.1);color:var(--atom);font-weight:700;padding:12px 28px;border-radius:50px;border:1px solid rgba(255,107,53,.4);cursor:pointer;font-size:.9rem;font-family:'Cairo',sans-serif;transition:all .3s;display:inline-flex;align-items:center;gap:7px;}
+.btn-o:hover{background:rgba(255,107,53,.2);transform:translateY(-2px);}
+
+/* ===== HERO ===== */
+.hero{padding:120px 40px 50px;text-align:center;display:flex;flex-direction:column;align-items:center;position:relative;}
+.hero::before{content:'';position:absolute;top:60px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(ellipse,rgba(0,212,255,.07) 0%,transparent 70%);pointer-events:none;border-radius:50%;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:50px;padding:7px 20px;font-size:.8rem;color:var(--physics);margin-bottom:28px;animation:fadeUp .8s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:7px;height:7px;background:var(--science);border-radius:50%;animation:pulse 1.5s infinite;box-shadow:0 0 6px var(--science);}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+.hero h2{font-size:clamp(2rem,5.5vw,3.6rem);font-weight:900;line-height:1.12;margin-bottom:18px;animation:fadeUp .8s .1s ease both;}
+.gp{background:linear-gradient(90deg,var(--physics),#80eaff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(0,212,255,.3));}
+.gs{background:linear-gradient(90deg,var(--science),#90f5a0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{color:var(--text-muted);font-size:1rem;line-height:1.9;margin-bottom:36px;max-width:600px;animation:fadeUp .8s .2s ease both;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .8s .3s ease both;}
+.stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:0 40px 70px;position:relative;z-index:1;}
+.sc{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:22px 32px;text-align:center;min-width:135px;transition:all .3s;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;}
+.sc.b::before{background:linear-gradient(90deg,var(--physics),transparent);}
+.sc.g::before{background:linear-gradient(90deg,var(--science),transparent);}
+.sc.o::before{background:linear-gradient(90deg,var(--atom),transparent);}
+.sc::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,var(--glow) 0%,transparent 70%);opacity:0;transition:.3s;}
+.sc.b{--glow:rgba(0,212,255,.06);}
+.sc.g{--glow:rgba(57,211,83,.06);}
+.sc.o{--glow:rgba(255,107,53,.06);}
+.sc:hover{transform:translateY(-5px);}
+.sc:hover::after{opacity:1;}
+.sn{font-size:2rem;font-weight:900;line-height:1;margin-bottom:5px;}
+.sc.b .sn{color:var(--physics);}
+.sc.g .sn{color:var(--science);}
+.sc.o .sn{color:var(--atom);}
+.sl{font-size:.78rem;color:var(--text-muted);}
+.sec{position:relative;z-index:1;padding:60px 40px;max-width:1200px;margin:0 auto;}
+.sec-head{text-align:center;margin-bottom:48px;}
+.sec-tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:2px;margin-bottom:12px;padding:5px 16px;border-radius:50px;}
+.tag-b{color:var(--physics);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);}
+.tag-g{color:var(--science);background:rgba(57,211,83,.08);border:1px solid rgba(57,211,83,.2);}
+.sec-head h3{font-size:1.9rem;font-weight:800;margin-bottom:10px;}
+.sec-head p{color:var(--text-muted);font-size:.93rem;}
+.divl{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 40px;}
+.divl hr{border:none;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.12),transparent);}
+.stages-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;}
+.stage-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;padding:26px;transition:all .35s;cursor:pointer;text-align:center;position:relative;overflow:hidden;}
+.stage-card::after{content:'';position:absolute;inset:0;opacity:0;transition:.3s;}
+.stage-card:hover{transform:translateY(-6px);}
+.stage-card:hover::after{opacity:1;}
+.stage-card.s1:hover{border-color:rgba(0,212,255,.45);box-shadow:0 10px 40px rgba(0,212,255,.12);}
+.stage-card.s1::after{background:radial-gradient(ellipse at top,rgba(0,212,255,.05),transparent 70%);}
+.stage-card.s2:hover{border-color:rgba(57,211,83,.45);box-shadow:0 10px 40px rgba(57,211,83,.12);}
+.stage-card.s2::after{background:radial-gradient(ellipse at top,rgba(57,211,83,.05),transparent 70%);}
+.stage-card.s3:hover{border-color:rgba(255,107,53,.45);box-shadow:0 10px 40px rgba(255,107,53,.12);}
+.stage-card.s3::after{background:radial-gradient(ellipse at top,rgba(255,107,53,.05),transparent 70%);}
+.stage-card.s4:hover{border-color:rgba(255,215,0,.45);box-shadow:0 10px 40px rgba(255,215,0,.12);}
+.stage-card.s4::after{background:radial-gradient(ellipse at top,rgba(255,215,0,.05),transparent 70%);}
+.stage-icon{font-size:2.5rem;margin-bottom:14px;display:block;}
+.stage-card h4{font-size:1.05rem;font-weight:700;margin-bottom:8px;}
+.stage-card p{color:var(--text-muted);font-size:.8rem;line-height:1.6;}
+.stage-levels{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:12px;}
+.slevel{font-size:.68rem;padding:3px 10px;border-radius:12px;font-weight:600;}
+.s1 .slevel{background:rgba(0,212,255,.1);color:var(--physics);}
+.s2 .slevel{background:rgba(57,211,83,.1);color:var(--science);}
+.s3 .slevel{background:rgba(255,107,53,.1);color:var(--atom);}
+.s4 .slevel{background:rgba(255,215,0,.1);color:var(--gold);}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
+.feat-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:24px;transition:all .3s;}
+.feat-card:hover{border-color:rgba(0,212,255,.2);transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,212,255,.07);}
+.feat-card .fi{font-size:2rem;margin-bottom:13px;display:block;}
+.feat-card h4{font-size:.93rem;font-weight:700;margin-bottom:7px;}
+.feat-card p{color:var(--text-muted);font-size:.8rem;line-height:1.65;}
+
+/* ===== LOGIN ===== */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:90px 20px 40px;}
+.login-box{background:var(--card-bg);border:1px solid rgba(0,212,255,.18);border-radius:24px;padding:38px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(0,212,255,.05);}
+.login-box h2{font-size:1.45rem;font-weight:800;text-align:center;margin-bottom:5px;}
+.login-box .sub{text-align:center;color:var(--text-muted);font-size:.85rem;margin-bottom:26px;}
+.tabs{display:flex;background:rgba(255,255,255,.04);border-radius:13px;padding:4px;margin-bottom:22px;gap:4px;}
+.tab-btn{flex:1;padding:10px;text-align:center;border-radius:10px;cursor:pointer;font-size:.86rem;font-weight:700;color:var(--text-muted);transition:.3s;font-family:'Cairo',sans-serif;border:none;background:none;}
+.tab-btn.active{background:linear-gradient(135deg,var(--physics),#0099cc);color:#000;}
+.fg{margin-bottom:15px;}
+.fg label{display:block;font-size:.8rem;color:var(--text-muted);margin-bottom:7px;font-weight:600;}
+.fg input,.fg select{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 15px;color:var(--text-main);font-family:'Cairo',sans-serif;font-size:.9rem;transition:.3s;outline:none;}
+.fg input:focus{border-color:var(--physics);background:rgba(0,212,255,.05);box-shadow:0 0 0 3px rgba(0,212,255,.1);}
+.fg select{cursor:pointer;}
+.fg select option{background:var(--card-bg);}
+.btn-sub{width:100%;background:linear-gradient(135deg,var(--physics),#0099cc);color:#000;font-weight:800;padding:14px;border-radius:12px;border:none;cursor:pointer;font-size:.93rem;font-family:'Cairo',sans-serif;margin-top:6px;transition:all .3s;box-shadow:0 0 20px rgba(0,212,255,.25);}
+.btn-sub:hover{transform:translateY(-2px);box-shadow:0 4px 30px rgba(0,212,255,.45);}
+.btn-sub.green{background:linear-gradient(135deg,var(--science),#1a9e2f);box-shadow:0 0 20px rgba(57,211,83,.2);}
+.btn-sub.green:hover{box-shadow:0 4px 30px rgba(57,211,83,.4);}
+.err{color:#ff6b6b;font-size:.8rem;text-align:center;margin-top:10px;min-height:18px;}
+.dash-page{padding:86px 28px 60px;max-width:1100px;margin:0 auto;}
+.dash-hd{margin-bottom:30px;}
+.dash-hd h2{font-size:1.7rem;font-weight:800;margin-bottom:5px;}
+.dash-hd p{color:var(--text-muted);font-size:.88rem;}
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;padding:24px;margin-bottom:18px;}
+.card h3{font-size:.97rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.exam-list{display:flex;flex-direction:column;gap:12px;}
+.ei{background:var(--card-bg);border:1px solid var(--card-border);border-radius:15px;padding:18px 22px;display:flex;align-items:center;gap:15px;transition:all .3s;}
+.ei:hover{border-color:rgba(0,212,255,.25);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3);}
+.ei-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.15);}
+.ei-info{flex:1;}
+.ei-info h4{font-size:.93rem;font-weight:700;margin-bottom:4px;}
+.ei-info p{font-size:.76rem;color:var(--text-muted);}
+.ei-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.qtype-badge{font-size:.68rem;padding:3px 10px;border-radius:10px;font-weight:600;background:rgba(0,212,255,.1);color:var(--physics);}
+.gtbl{width:100%;border-collapse:collapse;}
+.gtbl th{text-align:right;padding:10px 14px;font-size:.78rem;color:var(--text-muted);border-bottom:1px solid var(--card-border);}
+.gtbl td{padding:12px 14px;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,.03);}
+.gtbl tr:hover td{background:rgba(0,212,255,.025);}
+.gb{display:inline-block;padding:3px 11px;border-radius:18px;font-size:.77rem;font-weight:700;}
+.ga{background:rgba(57,211,83,.13);color:var(--science);}
+.gb2{background:rgba(0,212,255,.13);color:var(--physics);}
+.gc{background:rgba(255,107,53,.13);color:var(--atom);}
+
+/* ===== EXAM PAGE ===== */
+.exam-pg{padding:86px 28px 60px;max-width:860px;margin:0 auto;}
+.timer-box{background:var(--card-bg);border:1px solid rgba(0,212,255,.3);border-radius:14px;padding:10px 26px;text-align:center;box-shadow:0 0 20px rgba(0,212,255,.1);}
+.timer-lbl{font-size:.72rem;color:var(--text-muted);margin-bottom:1px;}
+.timer-val{font-size:1.8rem;font-weight:900;color:var(--physics);font-variant-numeric:tabular-nums;}
+.q-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:15px;padding:24px;margin-bottom:16px;transition:.2s;}
+.q-card:hover{border-color:rgba(0,212,255,.15);}
+.q-num{font-size:.75rem;color:var(--physics);font-weight:700;margin-bottom:8px;background:rgba(0,212,255,.08);display:inline-block;padding:3px 10px;border-radius:8px;}
+.q-text{font-weight:700;margin-bottom:15px;font-size:.95rem;line-height:1.6;}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.opt-lbl{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:2px solid var(--card-border);border-radius:11px;padding:12px 15px;cursor:pointer;transition:.2s;font-size:.88rem;}
+.opt-lbl:hover{border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04);}
+.opt-lbl input{accent-color:var(--physics);}
+.tf-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.tf-btn{padding:16px;border-radius:13px;border:2px solid var(--card-border);background:rgba(255,255,255,.03);cursor:pointer;font-family:'Cairo',sans-serif;font-size:1.05rem;font-weight:700;transition:all .3s;color:var(--text-main);}
+.tf-btn:hover{border-color:rgba(255,255,255,.2);}
+.tf-btn.sel-t{border-color:var(--science);background:rgba(57,211,83,.1);color:var(--science);}
+.tf-btn.sel-f{border-color:var(--atom);background:rgba(255,107,53,.1);color:var(--atom);}
+.fill-input{width:100%;background:rgba(255,255,255,.05);border:2px solid rgba(0,212,255,.2);border-radius:11px;padding:12px 15px;color:var(--text-main);font-family:'Cairo',sans-serif;font-size:.93rem;outline:none;margin-top:9px;transition:.3s;}
+.fill-input:focus{border-color:var(--physics);box-shadow:0 0 0 3px rgba(0,212,255,.1);}
+
+/* ===== RESULT MODAL ===== */
+.result-overlay{position:fixed;inset:0;background:rgba(4,12,24,.92);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
+.result-overlay.hidden{display:none;}
+.result-box{background:var(--card-bg);border:1px solid rgba(0,212,255,.2);border-radius:24px;padding:40px;max-width:480px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:popIn .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.result-emoji{font-size:4rem;display:block;margin-bottom:16px;animation:bounce .8s infinite alternate;}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+.result-score{font-size:3.5rem;font-weight:900;margin-bottom:4px;}
+.result-pct{font-size:1.1rem;font-weight:700;margin-bottom:16px;}
+.result-msg{color:var(--text-muted);font-size:.9rem;line-height:1.7;margin-bottom:24px;}
+.result-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+/* ===== LEADERBOARD ===== */
+.ldr-page{padding:86px 28px 80px;max-width:800px;margin:0 auto;}
+.ldr-top3{display:flex;justify-content:center;align-items:flex-end;gap:20px;margin-bottom:36px;flex-wrap:wrap;}
+.ldr-top-card{text-align:center;transition:all .3s;cursor:default;}
+.ldr-top-card:hover{transform:translateY(-6px);}
+.ldr-ri{font-size:2.2rem;margin-bottom:8px;display:block;}
+.ldr-av{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto 10px;border:3px solid;box-shadow:0 0 20px;}
+.r1 .ldr-av{border-color:var(--gold);background:rgba(255,215,0,.1);width:80px;height:80px;font-size:2.1rem;box-shadow:0 0 30px rgba(255,215,0,.2);}
+.r2 .ldr-av{border-color:var(--silver);background:rgba(192,192,192,.1);box-shadow:0 0 20px rgba(192,192,192,.15);}
+.r3 .ldr-av{border-color:var(--bronze);background:rgba(205,127,50,.1);box-shadow:0 0 20px rgba(205,127,50,.15);}
+.r1{order:2;}.r2{order:1;}.r3{order:3;}
+.ldr-nm{font-size:.85rem;font-weight:700;margin-bottom:4px;}
+.ldr-sc{font-size:.77rem;font-weight:600;}
+.r1 .ldr-sc{color:var(--gold);}.r2 .ldr-sc{color:var(--silver);}.r3 .ldr-sc{color:var(--bronze);}
+.ldr-list{display:flex;flex-direction:column;gap:10px;}
+.ldr-item{background:var(--card-bg);border:1px solid var(--card-border);border-radius:15px;padding:15px 20px;display:flex;align-items:center;gap:15px;transition:all .3s;}
+.ldr-item:hover{border-color:rgba(0,212,255,.2);transform:translateX(-4px);}
+.ldr-pos{font-size:1rem;font-weight:900;min-width:30px;text-align:center;color:var(--text-muted);}
+.ldr-info{flex:1;}
+.ldr-info h4{font-size:.92rem;font-weight:700;}
+.ldr-info p{font-size:.76rem;color:var(--text-muted);}
+.ldr-pts{font-size:1rem;font-weight:800;color:var(--physics);}
+
+/* ===== ANALYTICS ===== */
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.chart-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;padding:24px;}
+.chart-card h4{font-size:.93rem;font-weight:700;margin-bottom:18px;}
+.progress-bar{background:rgba(255,255,255,.06);border-radius:8px;height:10px;margin-bottom:8px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:8px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.prog-row{margin-bottom:14px;}
+.prog-label{display:flex;justify-content:space-between;font-size:.79rem;color:var(--text-muted);margin-bottom:6px;}
+
+/* ===== TEACHER DASH ===== */
+.t-grid{display:grid;grid-template-columns:235px 1fr;min-height:calc(100vh - 66px);padding-top:66px;}
+.t-sidebar{background:var(--card-bg);border-left:1px solid var(--card-border);padding:26px 14px;position:sticky;top:66px;height:calc(100vh - 66px);overflow-y:auto;}
+.sb-title{font-size:.68rem;color:var(--text-muted);font-weight:700;letter-spacing:2.5px;margin-bottom:12px;padding:0 8px;text-transform:uppercase;}
+.sb-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:.86rem;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .3s;margin-bottom:3px;text-align:right;}
+.sb-btn:hover,.sb-btn.active{color:var(--physics);background:rgba(0,212,255,.09);}
+.sb-btn.active{box-shadow:inset 3px 0 0 var(--physics);}
+.t-main{padding:28px 30px 60px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.panel-title{font-size:1.4rem;font-weight:800;margin-bottom:24px;}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:14px;}
+.ff{margin-bottom:14px;}
+.ff label{display:block;font-size:.8rem;color:var(--text-muted);margin-bottom:7px;font-weight:600;}
+.ff input,.ff select,.ff textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 14px;color:var(--text-main);font-family:'Cairo',sans-serif;font-size:.88rem;outline:none;transition:.3s;}
+.ff input:focus,.ff select:focus{border-color:rgba(0,212,255,.4);background:rgba(0,212,255,.03);}
+.ff select{cursor:pointer;}
+.ff select option{background:var(--card-bg);}
+.ff textarea{resize:vertical;min-height:70px;}
+.qb{background:rgba(0,212,255,.03);border:1px solid rgba(0,212,255,.12);border-radius:14px;padding:20px;margin-bottom:14px;}
+.qb-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;}
+.qb-num{font-weight:800;color:var(--physics);font-size:.88rem;}
+.qtype-sel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:5px 11px;color:var(--text-main);font-family:'Cairo',sans-serif;font-size:.8rem;outline:none;cursor:pointer;margin-left:8px;}
+.qtype-sel option{background:var(--card-bg);}
+.btn-rm{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);color:var(--atom);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.78rem;font-family:'Cairo',sans-serif;transition:.2s;}
+.btn-rm:hover{background:rgba(255,107,53,.2);}
+.opts-build{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px;}
+.ob{display:flex;align-items:center;gap:8px;}
+.ob input[type=radio]{accent-color:var(--science);}
+.ob input[type=text]{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:9px 12px;color:var(--text-main);font-family:'Cairo',sans-serif;font-size:.85rem;outline:none;}
+.tf-builder{display:flex;gap:10px;margin-top:10px;}
+.tf-choice{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 17px;cursor:pointer;font-weight:600;font-size:.88rem;transition:.2s;}
+.tf-choice:hover{border-color:rgba(57,211,83,.3);}
+.tf-choice input{accent-color:var(--science);}
+.stbl{width:100%;border-collapse:collapse;}
+.stbl th{text-align:right;padding:11px 15px;font-size:.78rem;color:var(--text-muted);border-bottom:1px solid var(--card-border);background:rgba(0,212,255,.025);}
+.stbl td{padding:12px 15px;font-size:.83rem;border-bottom:1px solid rgba(255,255,255,.03);}
+.stbl tr:hover td{background:rgba(0,212,255,.025);}
+.search-bar{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 16px;color:var(--text-main);font-family:'Cairo',sans-serif;font-size:.88rem;outline:none;margin-bottom:18px;transition:.3s;}
+.search-bar:focus{border-color:rgba(0,212,255,.4);}
+.toast{position:fixed;bottom:28px;right:28px;z-index:999;background:var(--card-bg);border:1px solid rgba(57,211,83,.4);border-radius:14px;padding:14px 24px;font-size:.88rem;color:var(--science);transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.err{color:var(--atom);border-color:rgba(255,107,53,.4);}
+.loading{position:fixed;inset:0;background:rgba(4,12,24,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;transition:.3s;}
+.loading.hidden{opacity:0;pointer-events:none;}
+.spinner{width:48px;height:48px;border:3px solid rgba(0,212,255,.2);border-top-color:var(--physics);border-radius:50%;animation:spin .75s linear infinite;margin-bottom:14px;box-shadow:0 0 20px rgba(0,212,255,.2);}
+.loading p{color:var(--text-muted);font-size:.88rem;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(0,212,255,.2);border-radius:4px;}
+.fsel{background:var(--card-bg);border:1px solid var(--card-border);border-radius:11px;padding:10px 15px;color:var(--text-main);font-family:Cairo,sans-serif;font-size:.85rem;outline:none;cursor:pointer;transition:.2s;}
+.fsel:focus{border-color:rgba(0,212,255,.4);}
+@media(max-width:768px){
+  nav{padding:0 16px;}
+  .nav-links{display:none;}
+  #nav-user{display:none!important;}
+  #nb-login{display:none!important;}
+  .mob-nav{display:flex;}
+  body{padding-bottom:72px;}
+  .t-grid{grid-template-columns:1fr;}
+  .t-sidebar{position:static;height:auto;border-left:none;border-bottom:1px solid var(--card-border);}
+  .f-row{grid-template-columns:1fr;}
+  .opts-build{grid-template-columns:1fr;}
+  .opts-grid{grid-template-columns:1fr;}
+  .hero{padding:100px 20px 40px;}
+  .stats{padding:0 16px 50px;gap:12px;}
+  .sec{padding:40px 16px;}
+  .ldr-page,.dash-page,.exam-pg{padding-left:16px;padding-right:16px;}
+  .toast{bottom:80px;right:16px;left:16px;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="loading" id="loading"><div class="spinner"></div><p>جاري التحميل...</p></div>
+<div class="toast" id="toast"></div>
+
+<!-- Result Modal -->
+<div class="result-overlay hidden" id="result-overlay">
+  <div class="result-box">
+    <span class="result-emoji" id="result-emoji">🎉</span>
+    <div class="result-score" id="result-score-text"></div>
+    <div class="result-pct" id="result-pct-text"></div>
+    <div class="result-msg" id="result-msg-text"></div>
+    <div class="result-btns">
+      <button class="btn-p" onclick="closeResult()">📊 عرض لوحتي</button>
+      <button class="btn-s" onclick="goPage('leaderboard');closeResult()">🏆 الليدربورد</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mob-nav" id="mob-nav">
+  <button class="mob-nav-btn active" id="mnb-home" onclick="goPage('home');setMobNav('home')"><span class="mnb-icon">🏠</span>الرئيسية</button>
+  <button class="mob-nav-btn" id="mnb-exams" onclick="goPage('exams');setMobNav('exams')"><span class="mnb-icon">📝</span>الامتحانات</button>
+  <button class="mob-nav-btn" id="mnb-ldr" onclick="goPage('leaderboard');setMobNav('ldr')"><span class="mnb-icon">🏆</span>الليدربورد</button>
+  <button class="mob-nav-btn" id="mnb-dash" onclick="goDash();setMobNav('dash')" style="display:none"><span class="mnb-icon">📊</span>لوحتي</button>
+  <button class="mob-nav-btn" id="mnb-login" onclick="goPage('login');setMobNav('login')"><span class="mnb-icon">👤</span>دخول</button>
+  <button class="mob-nav-btn" id="mnb-logout" onclick="doLogout()" style="display:none;color:var(--atom);flex-direction:column;align-items:center;gap:3px"><span class="mnb-icon">🚪</span>خروج</button>
+</nav>
+
+<nav>
+  <div class="nav-logo" onclick="goPage('home')">
+    <svg width="36" height="36" viewBox="0 0 42 42" fill="none">
+      <circle cx="21" cy="21" r="4" fill="#00d4ff"/>
+      <ellipse cx="21" cy="21" rx="18" ry="8" stroke="#00d4ff" stroke-width="1.5" fill="none" opacity=".6"/>
+      <ellipse cx="21" cy="21" rx="18" ry="8" stroke="#39d353" stroke-width="1.5" fill="none" opacity=".6" transform="rotate(60 21 21)"/>
+      <ellipse cx="21" cy="21" rx="18" ry="8" stroke="#ff6b35" stroke-width="1.5" fill="none" opacity=".6" transform="rotate(120 21 21)"/>
+      <circle cx="21" cy="13" r="2.5" fill="#39d353"/>
+    </svg>
+    <h1>مستر مصطفى السايس <span>منصة الفيزياء والعلوم</span></h1>
+  </div>
+  <ul class="nav-links">
+    <li><button onclick="goPage('home')" id="nb-home" class="active">🏠 الرئيسية</button></li>
+    <li><button onclick="goPage('exams')" id="nb-exams">📝 الامتحانات</button></li>
+    <li><button onclick="goPage('leaderboard')" id="nb-ldr">🏆 الليدربورد</button></li>
+    <li><button onclick="goPage('sdash')" id="nb-sdash" style="display:none">📊 لوحتي</button></li>
+    <li><button onclick="goPage('tdash')" id="nb-tdash" style="display:none">⚙️ المدرس</button></li>
+  </ul>
+  <div id="nav-user">
+    <span id="nav-uname"></span>
+    <button class="btn-lo" onclick="doLogout()">خروج</button>
+  </div>
+  <button class="btn-nl" id="nb-login" onclick="goPage('login')" style="font-family:Cairo,sans-serif;font-size:.85rem;padding:7px 18px;border-radius:25px;border:none;cursor:pointer;">دخول</button>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge"><span class="dot"></span>المنصة التعليمية الرسمية · ٢٠٢٥</div>
+    <h2>تعلّم <span class="gp">الفيزياء</span> واكتشف <span class="gs">العلوم</span></h2>
+    <p>منصة تعليمية متكاملة لكل المراحل · ابتدائي · إعدادي · ثانوي<br>امتحانات تفاعلية · ليدربورد · تحليل الأداء</p>
+    <div class="hero-btns">
+      <button class="btn-p" onclick="goPage('login')">⚛ ابدأ الآن</button>
+      <button class="btn-s" onclick="goPage('leaderboard')">🏆 الليدربورد</button>
+      <button class="btn-o" onclick="goPage('exams')">📝 الامتحانات</button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="sc b"><div class="sn" id="st-s">٠</div><div class="sl">طالب مسجّل</div></div>
+    <div class="sc g"><div class="sn" id="st-e">٠</div><div class="sl">امتحان متاح</div></div>
+    <div class="sc o"><div class="sn" id="st-g">٠</div><div class="sl">إجابة مقدّمة</div></div>
+    <div class="sc b"><div class="sn">٣</div><div class="sl">مراحل دراسية</div></div>
+  </div>
+  <div class="divl"><hr></div>
+  <div class="sec">
+    <div class="sec-head"><span class="sec-tag tag-b">المراحل الدراسية</span><h3>اختر مرحلتك</h3><p>محتوى مخصص لكل مرحلة</p></div>
+    <div class="stages-grid">
+      <div class="stage-card s1" onclick="goPage('exams')">
+        <span class="stage-icon">🔬</span><h4>المرحلة الابتدائية</h4>
+        <p>علوم وطبيعة بطريقة ممتعة وبسيطة</p>
+        <div class="stage-levels"><span class="slevel">رابعة ابتدائي</span><span class="slevel">خامسة ابتدائي</span><span class="slevel">سادسة ابتدائي</span></div>
+      </div>
+      <div class="stage-card s2" onclick="goPage('exams')">
+        <span class="stage-icon">⚛️</span><h4>المرحلة الإعدادية</h4>
+        <p>فيزياء وكيمياء وأحياء وفق المنهج</p>
+        <div class="stage-levels"><span class="slevel">أولى إعداد</span><span class="slevel">تانية إعداد</span><span class="slevel">تالتة إعداد</span></div>
+      </div>
+      <div class="stage-card s3" onclick="goPage('exams')">
+        <span class="stage-icon">🧪</span><h4>المرحلة الثانوية</h4>
+        <p>فيزياء متقدمة وكيمياء وأحياء للثانوية</p>
+        <div class="stage-levels"><span class="slevel">أولى ثانوي</span><span class="slevel">تانية ثانوي</span><span class="slevel">تالتة ثانوي</span></div>
+      </div>
+      <div class="stage-card s4" onclick="goPage('leaderboard')">
+        <span class="stage-icon">🏆</span><h4>مسابقات وتحديات</h4>
+        <p>كويزات تنافسية وترتيب بين الطلاب</p>
+        <div class="stage-levels"><span class="slevel">كل المراحل</span><span class="slevel">تنافسي</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="divl"><hr></div>
+  <div class="sec">
+    <div class="sec-head"><span class="sec-tag tag-g">مميزات المنصة</span><h3>كل اللي محتاجه</h3></div>
+    <div class="feat-grid">
+      <div class="feat-card"><span class="fi">🏆</span><h4>ليدربورد تنافسي</h4><p>ترتيب الطلاب بالنقاط مع الميداليات</p></div>
+      <div class="feat-card"><span class="fi">📊</span><h4>تحليل الأداء</h4><p>رسوم بيانية لمتابعة تقدم الطالب</p></div>
+      <div class="feat-card"><span class="fi">🎯</span><h4>أنواع أسئلة متعددة</h4><p>اختيار متعدد · صح وغلط · ملء الفراغات</p></div>
+      <div class="feat-card"><span class="fi">⏱️</span><h4>تايمر مركزي</h4><p>المدرس يتحكم في وقت الامتحان</p></div>
+      <div class="feat-card"><span class="fi">🔒</span><h4>أكواد دخول</h4><p>كل امتحان بكود خاص آمن</p></div>
+      <div class="feat-card"><span class="fi">📤</span><h4>تصدير الدرجات</h4><p>استخراج الدرجات في ملف Excel</p></div>
+      <div class="feat-card"><span class="fi">🆓</span><h4>مجاني 100%</h4><p>بدون أي رسوم أو اشتراكات</p></div>
+      <div class="feat-card"><span class="fi">📱</span><h4>يشتغل على المحمول</h4><p>متوافق مع كل الأجهزة</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page" id="page-login">
+  <div class="login-page">
+    <div class="login-box">
+      <h2>مرحباً بك 👋</h2><p class="sub">سجّل دخولك للوصول للمحتوى</p>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchMainTab('student',this)">🎓 طالب</button>
+        <button class="tab-btn" onclick="switchMainTab('teacher',this)">👨‍🏫 مدرس</button>
+      </div>
+      <div id="tab-student">
+        <div class="tabs">
+          <button class="tab-btn active" id="stab-l" onclick="switchStudentTab('login')">دخول</button>
+          <button class="tab-btn" id="stab-r" onclick="switchStudentTab('reg')">تسجيل جديد</button>
+        </div>
+        <div id="sf-login">
+          <div class="fg"><label>البريد الإلكتروني</label><input type="email" id="s-email" placeholder="بريدك الإلكتروني"></div>
+          <div class="fg"><label>كلمة السر</label><input type="password" id="s-pass" placeholder="••••••••"></div>
+          <button class="btn-sub" onclick="studentLogin()">🚀 دخول</button>
+        </div>
+        <div id="sf-reg" style="display:none">
+          <div class="fg"><label>الاسم الكامل</label><input type="text" id="s-name" placeholder="اسمك بالكامل"></div>
+          <div class="fg"><label>المرحلة الدراسية</label>
+            <select id="s-stage" onchange="updateGrades()"><option value="">اختر المرحلة</option><option value="ابتدائي">ابتدائي</option><option value="إعدادي">إعدادي</option><option value="ثانوي">ثانوي</option></select>
+          </div>
+          <div class="fg"><label>الصف الدراسي</label><select id="s-grade"><option value="">اختر صفك</option></select></div>
+          <div class="fg"><label>البريد الإلكتروني</label><input type="email" id="s-remail" placeholder="بريدك الإلكتروني"></div>
+          <div class="fg"><label>كلمة السر</label><input type="password" id="s-rpass" placeholder="على الأقل ٦ أحرف"></div>
+          <button class="btn-sub" onclick="studentRegister()">✨ إنشاء حساب</button>
+        </div>
+        <div class="err" id="s-err"></div>
+      </div>
+      <div id="tab-teacher" style="display:none">
+        <div class="fg"><label>كلمة سر المدرس</label><input type="password" id="t-pass" placeholder="••••••••"></div>
+        <button class="btn-sub green" onclick="teacherLogin()">🔐 دخول المدرس</button>
+        <div class="err" id="t-err"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT DASH -->
+<div class="page" id="page-sdash">
+  <div class="dash-page">
+    <div class="dash-hd"><h2>مرحباً، <span id="s-welcome" class="gp"></span> 👋</h2><p id="s-grade-disp" style="color:var(--text-muted)"></p></div>
+    <div class="analytics-grid" style="margin-bottom:18px">
+      <div class="chart-card"><h4>📈 أدائك في الامتحانات</h4><canvas id="student-chart" height="160"></canvas></div>
+      <div class="chart-card"><h4>🎯 إحصائياتك</h4><div id="student-stats-detail"><p style="color:var(--text-muted);font-size:.85rem">قدّم امتحانات لتظهر إحصائياتك</p></div></div>
+    </div>
+    <div class="card"><h3>📝 الامتحانات المتاحة</h3><div class="exam-list" id="s-exam-list"><p style="color:var(--text-muted);text-align:center;padding:20px">جاري التحميل...</p></div></div>
+    <div class="card"><h3>📊 درجاتي</h3><table class="gtbl"><thead><tr><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>الوقت</th></tr></thead><tbody id="s-grades"></tbody></table></div>
+  </div>
+</div>
+
+<!-- EXAM PAGE -->
+<div class="page" id="page-exam">
+  <div class="exam-pg">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px">
+      <div><h2 id="ex-title" style="font-size:1.4rem;font-weight:800;margin-bottom:3px"></h2><p id="ex-subj" style="color:var(--text-muted);font-size:.85rem"></p></div>
+      <div class="timer-box"><div class="timer-lbl">الوقت المتبقي</div><div class="timer-val" id="ex-timer">00:00</div></div>
+    </div>
+    <div id="ex-questions"></div>
+    <button class="btn-p" onclick="submitExam()" style="margin-top:20px;width:100%;justify-content:center;font-size:.95rem;padding:15px">✅ تسليم الامتحان</button>
+  </div>
+</div>
+
+<!-- PUBLIC EXAMS -->
+<div class="page" id="page-exams">
+  <div class="dash-page">
+    <div class="dash-hd"><h2>📝 الامتحانات المتاحة</h2><p>اختر امتحانك وابدأ</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <select class="fsel" id="filter-stage" onchange="filterExams()"><option value="">كل المراحل</option><option value="ابتدائي">ابتدائي</option><option value="إعدادي">إعدادي</option><option value="ثانوي">ثانوي</option></select>
+      <select class="fsel" id="filter-subj" onchange="filterExams()"><option value="">كل المواد</option><option>الفيزياء</option><option>العلوم</option><option>الكيمياء</option><option>الأحياء</option></select>
+    </div>
+    <div class="exam-list" id="pub-exam-list"><p style="color:var(--text-muted);text-align:center;padding:40px">جاري التحميل...</p></div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="page" id="page-leaderboard">
+  <div class="ldr-page">
+    <div class="dash-hd"><h2>🏆 ليدربورد الطلاب</h2><p>أفضل الطلاب أداءً</p></div>
+    <div style="margin-bottom:20px">
+      <select class="fsel" id="ldr-filter" onchange="loadLeaderboard()"><option value="">كل المراحل</option><option value="ابتدائي">ابتدائي</option><option value="إعدادي">إعدادي</option><option value="ثانوي">ثانوي</option></select>
+    </div>
+    <div class="ldr-top3" id="ldr-top3"></div>
+    <div class="ldr-list" id="ldr-list"></div>
+  </div>
+</div>
+
+<!-- TEACHER DASH -->
+<div class="page" id="page-tdash">
+  <div class="t-grid">
+    <div class="t-sidebar">
+      <div class="sb-title">لوحة التحكم</div>
+      <button class="sb-btn active" onclick="showPanel('overview')" id="sb-overview">📊 نظرة عامة</button>
+      <button class="sb-btn" onclick="showPanel('create')" id="sb-create">➕ إنشاء امتحان</button>
+      <button class="sb-btn" onclick="showPanel('exlist')" id="sb-exlist">📋 الامتحانات</button>
+      <button class="sb-btn" onclick="showPanel('students')" id="sb-students">👥 الطلاب</button>
+      <button class="sb-btn" onclick="showPanel('grades')" id="sb-grades">🏆 الدرجات</button>
+      <button class="sb-btn" onclick="showPanel('analytics')" id="sb-analytics">📈 التحليلات</button>
+    </div>
+    <div class="t-main">
+      <div class="panel active" id="panel-overview">
+        <div class="panel-title">📊 نظرة عامة</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px">
+          <div class="sc b"><div class="sn" id="t-st-s">٠</div><div class="sl">الطلاب</div></div>
+          <div class="sc g"><div class="sn" id="t-st-e">٠</div><div class="sl">الامتحانات</div></div>
+          <div class="sc o"><div class="sn" id="t-st-g">٠</div><div class="sl">الإجابات</div></div>
+          <div class="sc b"><div class="sn" id="t-st-avg">٠</div><div class="sl">المتوسط</div></div>
+        </div>
+        <div class="analytics-grid" style="margin-bottom:18px">
+          <div class="chart-card"><h4>📊 توزيع الدرجات</h4><canvas id="t-dist-chart" height="180"></canvas></div>
+          <div class="chart-card"><h4>📚 الأداء بالمواد</h4><canvas id="t-subj-chart" height="180"></canvas></div>
+        </div>
+        <div class="card"><h3>📋 آخر الإجابات</h3><table class="stbl" style="margin-top:10px"><thead><tr><th>الطالب</th><th>الامتحان</th><th>الدرجة</th><th>الوقت</th></tr></thead><tbody id="t-recent"></tbody></table></div>
+      </div>
+
+      <div class="panel" id="panel-create">
+        <div class="panel-title">➕ إنشاء امتحان جديد</div>
+        <div class="card">
+          <div class="f-row">
+            <div class="ff"><label>اسم الامتحان</label><input type="text" id="ex-name" placeholder="مثال: كويز التيار الكهربي"></div>
+            <div class="ff"><label>المادة</label><select id="ex-subject"><option>الفيزياء</option><option>العلوم</option><option>الكيمياء</option><option>الأحياء</option></select></div>
+          </div>
+          <div class="f-row">
+            <div class="ff"><label>المرحلة</label><select id="ex-stage" onchange="updateExamGrades()"><option value="ابتدائي">ابتدائي</option><option value="إعدادي">إعدادي</option><option value="ثانوي">ثانوي</option></select></div>
+            <div class="ff"><label>الصف</label><select id="ex-grade"></select></div>
+          </div>
+          <div class="f-row">
+            <div class="ff"><label>المدة (دقائق)</label><input type="number" id="ex-dur" value="10" min="1" max="180"></div>
+            <div class="ff"><label>كود الدخول (اختياري)</label><input type="text" id="ex-code" placeholder="مثال: PHY2025"></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:18px 0 12px">
+            <span style="font-weight:700">الأسئلة</span>
+            <button class="btn-p" onclick="addQ()" style="padding:7px 15px;font-size:.8rem">+ سؤال</button>
+          </div>
+          <div id="q-container"></div>
+          <button class="btn-p" onclick="saveExam()" style="width:100%;justify-content:center;padding:13px;font-size:.92rem;margin-top:6px">💾 حفظ الامتحان</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-exlist">
+        <div class="panel-title">📋 الامتحانات</div>
+        <div id="t-exams-list"></div>
+      </div>
+
+      <div class="panel" id="panel-students">
+        <div class="panel-title">👥 الطلاب المسجّلين</div>
+        <input class="search-bar" type="text" id="s-search" placeholder="🔍 ابحث باسم الطالب..." oninput="filterStudents()">
+        <table class="stbl"><thead><tr><th>الاسم</th><th>المرحلة</th><th>الصف</th><th>البريد</th></tr></thead><tbody id="t-stud-body"></tbody></table>
+      </div>
+
+      <div class="panel" id="panel-grades">
+        <div class="panel-title">🏆 الدرجات</div>
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+          <button class="btn-p" onclick="exportCSV()" style="padding:9px 18px;font-size:.83rem">📤 تصدير CSV</button>
+          <select class="fsel" id="filter-exam-g" onchange="filterGrades()"><option value="">كل الامتحانات</option></select>
+        </div>
+        <table class="stbl"><thead><tr><th>الطالب</th><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>النسبة</th><th>الوقت</th></tr></thead><tbody id="t-grades-body"></tbody></table>
+      </div>
+
+      <div class="panel" id="panel-analytics">
+        <div class="panel-title">📈 تحليل الأداء</div>
+        <div class="analytics-grid">
+          <div class="chart-card"><h4>📊 توزيع الدرجات</h4><canvas id="t-dist2" height="200"></canvas></div>
+          <div class="chart-card"><h4>📚 الأداء بالمواد</h4><canvas id="t-subj2" height="200"></canvas></div>
+          <div class="chart-card" style="grid-column:1/-1"><h4>🏆 أعلى الطلاب أداءً</h4><div id="top-students"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_URL='https://script.google.com/macros/s/AKfycbw46NUcIhD2LjoBWzV-sC9aXpJkP84YexYSevRZT-hN9MLXOePZoBRw1l92mpOTfTZb/exec';
+const TEACHER_PASS='mostafa2025';
+const GRADES_MAP={'ابتدائي':['رابعة ابتدائي','خامسة ابتدائي','سادسة ابتدائي'],'إعدادي':['أولى إعداد','تانية إعداد','تالتة إعداد'],'ثانوي':['أولى ثانوي','تانية ثانوي','تالتة ثانوي']};
+let currentUser=null,currentExam=null,examTimerInt=null,qCount=0;
+let allStudents=[],allGrades=[],allExams=[];
+let sChartInst=null;
+
+async function api(data){
+  try{const r=await fetch(SHEET_URL,{method:'POST',body:JSON.stringify(data)});return await r.json();}
+  catch{try{const r=await fetch(SHEET_URL+'?data='+encodeURIComponent(JSON.stringify(data)));return await r.json();}catch{return null;}}
+}
+
+window.onload=async()=>{
+  initBG();updateExamGrades();
+  const saved=localStorage.getItem('msUser');
+  if(saved){
+    currentUser=JSON.parse(saved);updateNav();
+    if(currentUser.role==='teacher')await loadTeacherData();
+    else{document.getElementById('s-welcome').textContent=currentUser.name;document.getElementById('s-grade-disp').textContent=(currentUser.stage||'')+' · '+(currentUser.grade||'');await loadStudentExams();await loadStudentGrades();}
+  }
+  await loadStats();await loadPublicExams();await loadLeaderboard();hideLoad();
+};
+
+window.updateGrades=()=>{
+  const stage=document.getElementById('s-stage').value;
+  const sel=document.getElementById('s-grade');
+  sel.innerHTML='<option value="">اختر صفك</option>';
+  if(stage&&GRADES_MAP[stage])GRADES_MAP[stage].forEach(g=>sel.innerHTML+=`<option>${g}</option>`);
+};
+
+window.updateExamGrades=()=>{
+  const stage=document.getElementById('ex-stage')?.value||'إعدادي';
+  const sel=document.getElementById('ex-grade');
+  if(!sel)return;sel.innerHTML='';
+  GRADES_MAP[stage]?.forEach(g=>sel.innerHTML+=`<option>${g}</option>`);
+};
+
+window.studentLogin=async()=>{
+  const email=document.getElementById('s-email').value.trim();
+  const pass=document.getElementById('s-pass').value;
+  if(!email||!pass){setErr('s-err','اكمل البيانات');return;}
+  showLoad();const res=await api({type:'login',email,password:pass});hideLoad();
+  if(res?.success){
+    currentUser={name:res.name,grade:res.grade,stage:res.stage||'',email,role:'student'};
+    localStorage.setItem('msUser',JSON.stringify(currentUser));updateNav();
+    document.getElementById('s-welcome').textContent=res.name;
+    document.getElementById('s-grade-disp').textContent=(res.stage||'')+' · '+res.grade;
+    await loadStudentExams();await loadStudentGrades();goPage('sdash');toast('أهلاً '+res.name+'! ✨');
+  }else setErr('s-err','خطأ في البريد أو كلمة السر');
+};
+
+window.studentRegister=async()=>{
+  const name=document.getElementById('s-name').value.trim();
+  const stage=document.getElementById('s-stage').value;
+  const grade=document.getElementById('s-grade').value;
+  const email=document.getElementById('s-remail').value.trim();
+  const pass=document.getElementById('s-rpass').value;
+  if(!name||!stage||!grade||!email||!pass){setErr('s-err','اكمل كل البيانات');return;}
+  if(pass.length<6){setErr('s-err','كلمة السر على الأقل ٦ أحرف');return;}
+  showLoad();await api({type:'student',name,stage,grade,email,password:pass});hideLoad();
+  currentUser={name,stage,grade,email,role:'student'};
+  localStorage.setItem('msUser',JSON.stringify(currentUser));updateNav();
+  document.getElementById('s-welcome').textContent=name;
+  document.getElementById('s-grade-disp').textContent=stage+' · '+grade;
+  await loadStudentExams();goPage('sdash');toast('تم إنشاء حسابك 🎉');await loadStats();
+};
+
+window.teacherLogin=()=>{
+  if(document.getElementById('t-pass').value===TEACHER_PASS){
+    currentUser={name:'مستر مصطفى',role:'teacher'};
+    localStorage.setItem('msUser',JSON.stringify(currentUser));
+    updateNav();loadTeacherData();goPage('tdash');toast('أهلاً مستر مصطفى 👨‍🏫');
+  }else setErr('t-err','كلمة السر غلط');
+};
+
+window.doLogout=()=>{currentUser=null;localStorage.removeItem('msUser');updateNav();setMobNav('home');goPage('home');toast('تم تسجيل الخروج');};
+
+window.closeResult=()=>{document.getElementById('result-overlay').classList.add('hidden');};
+
+window.goDash=()=>{if(currentUser?.role==='teacher')goPage('tdash');else goPage('sdash');};
+
+window.setMobNav=(name)=>{
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('mnb-'+name);if(el)el.classList.add('active');
+};
+
+function updateNav(){
+  const in_=!!currentUser;
+  // Desktop
+  document.getElementById('nb-login').style.display=in_?'none':'';
+  document.getElementById('nav-user').style.display=in_?'flex':'none';
+  if(in_){
+    document.getElementById('nav-uname').textContent=currentUser.role==='teacher'?'👨‍🏫 المدرس':'🎓 '+currentUser.name;
+    document.getElementById('nb-sdash').style.display=currentUser.role==='student'?'':'none';
+    document.getElementById('nb-tdash').style.display=currentUser.role==='teacher'?'':'none';
+  }else{
+    document.getElementById('nb-sdash').style.display='none';
+    document.getElementById('nb-tdash').style.display='none';
+  }
+  // Mobile nav - use flex for visible items
+  const mLogin=document.getElementById('mnb-login');
+  const mDash=document.getElementById('mnb-dash');
+  const mLogout=document.getElementById('mnb-logout');
+  if(mLogin)mLogin.style.display=in_?'none':'flex';
+  if(mDash)mDash.style.display=in_?'flex':'none';
+  if(mLogout)mLogout.style.display=in_?'flex':'none';
+}
+
+async function loadStats(){
+  const[s,e,g]=await Promise.all([api({type:'getStudents'}),api({type:'getExams'}),api({type:'getGrades'})]);
+  document.getElementById('st-s').textContent=toAr(Array.isArray(s)?s.length:0);
+  document.getElementById('st-e').textContent=toAr(Array.isArray(e)?e.length:0);
+  document.getElementById('st-g').textContent=toAr(Array.isArray(g)?g.length:0);
+}
+
+async function loadPublicExams(){
+  const list=document.getElementById('pub-exam-list');
+  const exams=await api({type:'getExams'});
+  allExams=Array.isArray(exams)?exams:[];
+  renderExamList(allExams,list);
+}
+
+function renderExamList(exams,container){
+  if(!exams.length){container.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:40px;font-size:.9rem">لا يوجد امتحانات حالياً</p>';return;}
+  container.innerHTML=exams.map(ex=>`
+    <div class="ei">
+      <div class="ei-icon">${getIcon(ex.subject)}</div>
+      <div class="ei-info">
+        <h4>${ex.title}</h4>
+        <p>${ex.subject} · ${ex.stage||''} · ${ex.grade}</p>
+        <p style="margin-top:2px">⏱ ${ex.duration} دقيقة · ${ex.questions?.length||0} سؤال${ex.code?' · 🔒 مقيّد':''}</p>
+        <div class="ei-badges">${getQBadges(ex.questions)}</div>
+      </div>
+      <button class="btn-p" onclick="startExam(${ex.id})" style="padding:9px 18px;font-size:.8rem;white-space:nowrap">ابدأ ⚡</button>
+    </div>`).join('');
+}
+
+window.filterExams=()=>{
+  const stage=document.getElementById('filter-stage').value;
+  const subj=document.getElementById('filter-subj').value;
+  const list=document.getElementById('pub-exam-list');
+  let f=allExams;
+  if(stage)f=f.filter(e=>(e.stage||'').includes(stage));
+  if(subj)f=f.filter(e=>e.subject===subj);
+  renderExamList(f,list);
+};
+
+function getIcon(s){return{الفيزياء:'⚛️',العلوم:'🔬',الكيمياء:'🧪',الأحياء:'🌿'}[s]||'📝';}
+function getQBadges(qs){
+  if(!qs?.length)return'';
+  const types=[...new Set(qs.map(q=>q.type||'mcq'))];
+  const labels={mcq:'اختيار متعدد',tf:'صح وغلط',fill:'ملء الفراغات'};
+  return types.map(t=>`<span class="qtype-badge">${labels[t]||t}</span>`).join('');
+}
+
+async function loadStudentExams(){
+  const list=document.getElementById('s-exam-list');
+  const exams=await api({type:'getExams'});
+  allExams=Array.isArray(exams)?exams:[];
+  renderExamList(allExams,list);
+}
+
+window.startExam=async(id)=>{
+  if(!currentUser){goPage('login');toast('سجّل دخولك أولاً',true);return;}
+  const exam=allExams.find(e=>e.id==id);
+  if(!exam){toast('الامتحان مش موجود',true);return;}
+  if(exam.code){const c=prompt('🔒 أدخل كود الدخول:');if(c!==exam.code){toast('كود غلط!',true);return;}}
+  currentExam=exam;
+  document.getElementById('ex-title').textContent=exam.title;
+  document.getElementById('ex-subj').textContent=exam.subject+' · '+exam.grade;
+  renderExamQs(exam.questions);startTimer(exam.duration*60);goPage('exam');
+};
+
+function renderExamQs(questions){
+  document.getElementById('ex-questions').innerHTML=questions.map((q,i)=>{
+    const type=q.type||'mcq';let inner='';
+    if(type==='mcq')inner=`<div class="opts-grid">${q.options.map((o,oi)=>`<label class="opt-lbl"><input type="radio" name="q${i}" value="${oi}"> ${o}</label>`).join('')}</div>`;
+    else if(type==='tf')inner=`<div class="tf-grid"><button class="tf-btn" onclick="selTF(${i},true,this)">✅ صح</button><button class="tf-btn" onclick="selTF(${i},false,this)">❌ غلط</button></div><input type="hidden" id="tf-${i}" value="">`;
+    else if(type==='fill')inner=`<input class="fill-input" type="text" id="fill-${i}" placeholder="اكتب إجابتك هنا...">`;
+    return`<div class="q-card"><div class="q-num">سؤال ${i+1}</div><div class="q-text">${q.text}</div>${inner}</div>`;
+  }).join('');
+}
+
+window.selTF=(i,val,btn)=>{
+  btn.parentElement.querySelectorAll('.tf-btn').forEach(b=>{b.classList.remove('sel-t','sel-f');});
+  btn.classList.add(val?'sel-t':'sel-f');
+  document.getElementById('tf-'+i).value=val?'true':'false';
+};
+
+function startTimer(secs){
+  clearInterval(examTimerInt);let rem=secs;
+  const el=document.getElementById('ex-timer');
+  examTimerInt=setInterval(()=>{
+    rem--;
+    el.textContent=String(Math.floor(rem/60)).padStart(2,'0')+':'+String(rem%60).padStart(2,'0');
+    if(rem<=60)el.style.color='var(--atom)';
+    if(rem<=0){clearInterval(examTimerInt);submitExam();}
+  },1000);
+}
+
+window.submitExam=async()=>{
+  clearInterval(examTimerInt);if(!currentExam)return;
+  const qs=currentExam.questions;let score=0;
+  qs.forEach((q,i)=>{
+    const type=q.type||'mcq';
+    if(type==='mcq'){const s=document.querySelector(`input[name="q${i}"]:checked`);if(s&&parseInt(s.value)===q.correct)score++;}
+    else if(type==='tf'){const v=document.getElementById('tf-'+i)?.value;const c=q.correct===true||q.correct==='true';if((v==='true')===c)score++;}
+    else if(type==='fill'){const v=document.getElementById('fill-'+i)?.value.trim().toLowerCase();const a=String(q.answer||'').trim().toLowerCase();if(v&&v===a)score++;}
+  });
+  const total=qs.length,pct=Math.round(score/total*100);
+  showLoad();
+  await api({type:'submission',userName:currentUser.name,userStage:currentUser.stage||'',examTitle:currentExam.title,subject:currentExam.subject,grade:currentExam.grade,score,total,percentage:pct});
+  hideLoad();currentExam=null;
+  // Show result modal
+  const emoji=pct>=90?'🏆':pct>=70?'🎉':pct>=50?'😊':'💪';
+  const msg=pct>=90?'ممتاز! أداء رائع جداً استمر هكذا':pct>=70?'جيد جداً! نتيجة مشرفة':pct>=50?'مقبول، تقدر تعمل أحسن من كده!':'لا تستسلم، راجع المادة وحاول تاني!';
+  document.getElementById('result-emoji').textContent=emoji;
+  document.getElementById('result-score-text').textContent=`${score} / ${total}`;
+  document.getElementById('result-pct-text').style.color=pct>=90?'var(--science)':pct>=70?'var(--physics)':pct>=50?'var(--gold)':'var(--atom)';
+  document.getElementById('result-pct-text').textContent=`${pct}%`;
+  document.getElementById('result-msg-text').textContent=msg;
+  document.getElementById('result-overlay').classList.remove('hidden');
+  goPage('sdash');
+  await loadStudentGrades();await loadStats();await loadLeaderboard();
+};
+
+async function loadStudentGrades(){
+  const grades=await api({type:'getGrades'});
+  const all=Array.isArray(grades)?grades:[];
+  const mine=all.filter(g=>g.userName===currentUser.name);
+  const tbody=document.getElementById('s-grades');
+  if(!mine.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px">لم تقدّم امتحانات بعد</td></tr>';}
+  else tbody.innerHTML=mine.map(g=>{const p=parseInt(g.percentage);const cls=p>=80?'ga':p>=60?'gb2':'gc';return`<tr><td>${g.examTitle}</td><td>${g.subject}</td><td><span class="gb ${cls}">${g.score}/${g.total} (${g.percentage}%)</span></td><td style="font-size:.75rem;color:var(--text-muted)">${g.time||'—'}</td></tr>`;}).join('');
+  if(mine.length){
+    const avg=Math.round(mine.reduce((a,g)=>a+parseInt(g.percentage),0)/mine.length);
+    const best=Math.max(...mine.map(g=>parseInt(g.percentage)));
+    document.getElementById('student-stats-detail').innerHTML=`
+      <div class="prog-row"><div class="prog-label"><span>متوسط درجاتك</span><span>${avg}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${avg}%;background:var(--physics)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>أعلى درجة</span><span>${best}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${best}%;background:var(--science)"></div></div></div>
+      <div class="prog-row"><div class="prog-label"><span>عدد الامتحانات</span><span>${mine.length}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(mine.length*10,100)}%;background:var(--atom)"></div></div></div>`;
+    if(mine.length>=2){
+      const ctx=document.getElementById('student-chart').getContext('2d');
+      if(sChartInst)sChartInst.destroy();
+      sChartInst=new Chart(ctx,{type:'line',data:{labels:mine.slice(-8).map(g=>g.examTitle.substring(0,10)),datasets:[{label:'النسبة %',data:mine.slice(-8).map(g=>parseInt(g.percentage)),borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.1)',tension:.4,fill:true,pointBackgroundColor:'#00d4ff'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{color:'#7a9abf',font:{family:'Cairo'}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#7a9abf',font:{family:'Cairo'}},grid:{color:'rgba(255,255,255,.05)'}}}}});
+    }
+  }
+}
+
+window.loadLeaderboard=async()=>{
+  const[grades,students]=await Promise.all([api({type:'getGrades'}),api({type:'getStudents'})]);
+  const filter=document.getElementById('ldr-filter')?.value||'';
+  const all=Array.isArray(grades)?grades:[];
+  const studs=Array.isArray(students)?students:[];
+  const scoreMap={};
+  all.forEach(g=>{
+    const st=studs.find(s=>s.name===g.userName);
+    const stage=st?.stage||'';
+    if(filter&&!stage.includes(filter))return;
+    if(!scoreMap[g.userName])scoreMap[g.userName]={name:g.userName,stage,total:0,count:0};
+    scoreMap[g.userName].total+=parseInt(g.percentage||0);
+    scoreMap[g.userName].count++;
+  });
+  const ranked=Object.values(scoreMap).map(s=>({...s,avg:Math.round(s.total/s.count)})).sort((a,b)=>b.avg-a.avg);
+  const medals=['🥇','🥈','🥉'];const rClass=['r1','r2','r3'];
+  const top3=document.getElementById('ldr-top3');
+  if(ranked.length>=1){
+    const order=[ranked[1],ranked[0],ranked[2]].filter(Boolean);
+    top3.innerHTML=order.map(s=>{
+      const i=ranked.indexOf(s);
+      return`<div class="ldr-top-card ${rClass[i]}"><span class="ldr-ri">${medals[i]}</span><div class="ldr-av">👤</div><div class="ldr-nm">${s.name}</div><div class="ldr-sc">${s.avg}% · ${s.count} امتحان</div></div>`;
+    }).join('');
+  }else top3.innerHTML='';
+  const list=document.getElementById('ldr-list');
+  if(!ranked.length){list.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:30px">لا يوجد بيانات بعد</p>';return;}
+  list.innerHTML=ranked.slice(3).map((s,i)=>`<div class="ldr-item"><div class="ldr-pos">${i+4}</div><div style="font-size:1.4rem">👤</div><div class="ldr-info"><h4>${s.name}</h4><p>${s.stage||''} · ${s.count} امتحان</p></div><div class="ldr-pts">${s.avg}%</div></div>`).join('');
+};
+
+async function loadTeacherData(){
+  showLoad();
+  const[students,exams,grades]=await Promise.all([api({type:'getStudents'}),api({type:'getExams'}),api({type:'getGrades'})]);
+  hideLoad();
+  allStudents=Array.isArray(students)?students:[];
+  allExams=Array.isArray(exams)?exams:[];
+  allGrades=Array.isArray(grades)?grades:[];
+  const avg=allGrades.length?Math.round(allGrades.reduce((a,g)=>a+parseInt(g.percentage||0),0)/allGrades.length):0;
+  document.getElementById('t-st-s').textContent=toAr(allStudents.length);
+  document.getElementById('t-st-e').textContent=toAr(allExams.length);
+  document.getElementById('t-st-g').textContent=toAr(allGrades.length);
+  document.getElementById('t-st-avg').textContent=avg+'%';
+  const tbody=document.getElementById('t-recent');
+  if(!allGrades.length)tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px">لا يوجد إجابات</td></tr>';
+  else tbody.innerHTML=allGrades.slice(0,10).map(g=>{const p=parseInt(g.percentage);const cls=p>=80?'ga':p>=60?'gb2':'gc';return`<tr><td>${g.userName}</td><td>${g.examTitle}</td><td><span class="gb ${cls}">${g.score}/${g.total}</span></td><td style="font-size:.75rem;color:var(--text-muted)">${g.time||'—'}</td></tr>`;}).join('');
+  const el=document.getElementById('t-exams-list');
+  el.innerHTML=!allExams.length?'<p style="color:var(--text-muted);text-align:center;padding:40px">لا يوجد امتحانات</p>':allExams.map(ex=>`<div class="ei" style="margin-bottom:10px"><div class="ei-icon">${getIcon(ex.subject)}</div><div class="ei-info"><h4>${ex.title}</h4><p>${ex.subject} · ${ex.stage||''} · ${ex.grade} · ${ex.questions?.length||0} سؤال · ${ex.duration} دقيقة${ex.code?' · كود: '+ex.code:''}</p><div class="ei-badges">${getQBadges(ex.questions)}</div></div></div>`).join('');
+  document.getElementById('filter-exam-g').innerHTML='<option value="">كل الامتحانات</option>'+allExams.map(e=>`<option value="${e.id}">${e.title}</option>`).join('');
+  renderStudents(allStudents);renderGrades(allGrades);renderCharts();
+}
+
+function renderCharts(){
+  if(!allGrades.length)return;
+  const dist={excellent:0,good:0,pass:0,fail:0};
+  allGrades.forEach(g=>{const p=parseInt(g.percentage);if(p>=90)dist.excellent++;else if(p>=70)dist.good++;else if(p>=50)dist.pass++;else dist.fail++;});
+  ['t-dist-chart','t-dist2'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const ex=Chart.getChart(el);if(ex)ex.destroy();
+    new Chart(el.getContext('2d'),{type:'doughnut',data:{labels:['ممتاز','جيد','مقبول','راسب'],datasets:[{data:[dist.excellent,dist.good,dist.pass,dist.fail],backgroundColor:['#39d353','#00d4ff','#ffd700','#ff6b35'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#7a9abf',font:{family:'Cairo',size:11}}}}}});
+  });
+  const subjMap={};
+  allGrades.forEach(g=>{if(!subjMap[g.subject])subjMap[g.subject]={total:0,count:0};subjMap[g.subject].total+=parseInt(g.percentage||0);subjMap[g.subject].count++;});
+  const subjects=Object.keys(subjMap);
+  const avgs=subjects.map(s=>Math.round(subjMap[s].total/subjMap[s].count));
+  ['t-subj-chart','t-subj2'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const ex=Chart.getChart(el);if(ex)ex.destroy();
+    new Chart(el.getContext('2d'),{type:'bar',data:{labels:subjects,datasets:[{label:'متوسط %',data:avgs,backgroundColor:['rgba(0,212,255,.7)','rgba(57,211,83,.7)','rgba(255,107,53,.7)','rgba(255,215,0,.7)'],borderRadius:8}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{color:'#7a9abf',font:{family:'Cairo'}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#7a9abf',font:{family:'Cairo'}},grid:{display:false}}}}});
+  });
+  const sm={};
+  allGrades.forEach(g=>{if(!sm[g.userName])sm[g.userName]={total:0,count:0};sm[g.userName].total+=parseInt(g.percentage||0);sm[g.userName].count++;});
+  const top=Object.entries(sm).map(([n,v])=>({name:n,avg:Math.round(v.total/v.count),count:v.count})).sort((a,b)=>b.avg-a.avg).slice(0,5);
+  const topEl=document.getElementById('top-students');
+  if(topEl)topEl.innerHTML=top.map((s,i)=>`<div class="prog-row"><div class="prog-label"><span>${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${s.name}</span><span>${s.avg}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${s.avg}%;background:${['#ffd700','#c0c0c0','#cd7f32','#00d4ff','#39d353'][i]}"></div></div></div>`).join('');
+}
+
+function renderStudents(list){
+  const tbody=document.getElementById('t-stud-body');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px">لا يوجد طلاب</td></tr>';return;}
+  tbody.innerHTML=list.map(s=>`<tr><td>${s.name||'—'}</td><td>${s.stage||'—'}</td><td>${s.grade||'—'}</td><td style="font-size:.78rem;color:var(--text-muted)">${s.email||'—'}</td></tr>`).join('');
+}
+
+window.filterStudents=()=>{const q=document.getElementById('s-search').value.toLowerCase();renderStudents(allStudents.filter(s=>(s.name||'').toLowerCase().includes(q)));};
+
+function renderGrades(list){
+  const tbody=document.getElementById('t-grades-body');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:14px">لا يوجد درجات</td></tr>';return;}
+  tbody.innerHTML=list.map(g=>{const p=parseInt(g.percentage);const cls=p>=80?'ga':p>=60?'gb2':'gc';return`<tr><td>${g.userName}</td><td>${g.examTitle}</td><td>${g.subject}</td><td><span class="gb ${cls}">${g.score}/${g.total}</span></td><td>${g.percentage}%</td><td style="font-size:.75rem;color:var(--text-muted)">${g.time||'—'}</td></tr>`;}).join('');
+}
+
+window.filterGrades=()=>{const id=document.getElementById('filter-exam-g').value;renderGrades(id?allGrades.filter(g=>g.examId==id):allGrades);};
+
+window.exportCSV=()=>{
+  if(!allGrades.length){toast('لا يوجد درجات',true);return;}
+  const rows=[['الطالب','الامتحان','المادة','الدرجة','من','النسبة','الوقت']];
+  allGrades.forEach(g=>rows.push([g.userName,g.examTitle,g.subject,g.score,g.total,g.percentage+'%',g.time||'']));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='درجات.csv';a.click();toast('تم تصدير الدرجات 📤');
+};
+
+window.addQ=()=>{
+  qCount++;
+  const d=document.createElement('div');
+  d.className='qb';d.id='qb-'+qCount;
+  d.innerHTML=`<div class="qb-head"><span class="qb-num">سؤال ${qCount}</span><div style="display:flex;gap:8px;align-items:center"><select class="qtype-sel" onchange="changeQType(${qCount},this.value)"><option value="mcq">اختيار متعدد</option><option value="tf">صح وغلط</option><option value="fill">ملء الفراغات</option></select><button class="btn-rm" onclick="document.getElementById('qb-${qCount}').remove()">حذف</button></div></div>
+  <div class="ff"><label>نص السؤال</label><input type="text" id="qt-${qCount}" placeholder="اكتب السؤال هنا..."></div>
+  <div id="qopts-${qCount}">${getMCQOpts(qCount)}</div>`;
+  document.getElementById('q-container').appendChild(d);
+};
+
+function getMCQOpts(n){return`<div class="opts-build"><div class="ob"><input type="radio" name="c${n}" value="0"><input type="text" placeholder="الإجابة أ"></div><div class="ob"><input type="radio" name="c${n}" value="1"><input type="text" placeholder="الإجابة ب"></div><div class="ob"><input type="radio" name="c${n}" value="2"><input type="text" placeholder="الإجابة ج"></div><div class="ob"><input type="radio" name="c${n}" value="3"><input type="text" placeholder="الإجابة د"></div></div><p style="font-size:.72rem;color:var(--text-muted);margin-top:7px">🟢 اضغط الدايرة جنب الإجابة الصحيحة</p>`;}
+
+window.changeQType=(n,type)=>{
+  const c=document.getElementById('qopts-'+n);
+  if(type==='mcq')c.innerHTML=getMCQOpts(n);
+  else if(type==='tf')c.innerHTML=`<div class="tf-builder"><label class="tf-choice"><input type="radio" name="tf${n}" value="true"> ✅ صح (الإجابة الصحيحة)</label><label class="tf-choice"><input type="radio" name="tf${n}" value="false"> ❌ غلط (الإجابة الصحيحة)</label></div>`;
+  else if(type==='fill')c.innerHTML=`<div class="ff" style="margin-top:9px"><label>الإجابة الصحيحة</label><input type="text" id="fill-ans-${n}" placeholder="اكتب الإجابة الصحيحة"></div>`;
+};
+
+window.saveExam=async()=>{
+  const title=document.getElementById('ex-name').value.trim();
+  const subject=document.getElementById('ex-subject').value;
+  const stage=document.getElementById('ex-stage').value;
+  const grade=document.getElementById('ex-grade').value;
+  const duration=parseInt(document.getElementById('ex-dur').value);
+  const code=document.getElementById('ex-code').value.trim();
+  if(!title){toast('اكتب اسم الامتحان',true);return;}
+  const builders=document.querySelectorAll('.qb');
+  if(!builders.length){toast('أضف سؤال على الأقل',true);return;}
+  const questions=[];let valid=true;
+  builders.forEach(b=>{
+    const n=b.id.split('-')[1];
+    const text=document.getElementById('qt-'+n)?.value.trim();
+    const type=b.querySelector('.qtype-sel')?.value||'mcq';
+    if(!text){valid=false;return;}
+    if(type==='mcq'){
+      const opts=[...b.querySelectorAll('.ob input[type=text]')].map(i=>i.value.trim());
+      const cor=b.querySelector('input[type=radio]:checked');
+      if(opts.some(o=>!o)||!cor){valid=false;return;}
+      questions.push({text,type:'mcq',options:opts,correct:parseInt(cor.value)});
+    }else if(type==='tf'){
+      const cor=b.querySelector(`input[name="tf${n}"]:checked`);
+      if(!cor){valid=false;return;}
+      questions.push({text,type:'tf',correct:cor.value==='true'});
+    }else if(type==='fill'){
+      const ans=document.getElementById('fill-ans-'+n)?.value.trim();
+      if(!ans){valid=false;return;}
+      questions.push({text,type:'fill',answer:ans});
+    }
+  });
+  if(!valid){toast('اكمل كل الأسئلة',true);return;}
+  showLoad();
+  await api({type:'exam',title,subject,stage,grade,duration,code:code||'',questions});
+  hideLoad();
+  document.getElementById('ex-name').value='';document.getElementById('ex-code').value='';
+  document.getElementById('q-container').innerHTML='';qCount=0;
+  toast('تم حفظ الامتحان 🎉');await loadTeacherData();showPanel('exlist');
+};
+
+window.goPage=(name)=>{
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.remove('active'));
+  const map={home:'nb-home',exams:'nb-exams',leaderboard:'nb-ldr',sdash:'nb-sdash',tdash:'nb-tdash'};
+  const mmap={home:'home',exams:'exams',leaderboard:'ldr',sdash:'dash',tdash:'dash'};
+  if(map[name])document.getElementById(map[name])?.classList.add('active');
+  if(mmap[name])setMobNav(mmap[name]);
+  if(name==='exams')loadPublicExams();
+  if(name==='leaderboard')loadLeaderboard();
+  window.scrollTo(0,0);
+};
+
+window.showPanel=(name)=>{
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name)?.classList.add('active');
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sb-'+name)?.classList.add('active');
+  if(name==='analytics')setTimeout(renderCharts,100);
+};
+
+window.switchMainTab=(tab,btn)=>{
+  document.querySelectorAll('.tabs:first-of-type .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-student').style.display=tab==='student'?'':'none';
+  document.getElementById('tab-teacher').style.display=tab==='teacher'?'':'none';
+};
+
+window.switchStudentTab=(tab)=>{
+  document.getElementById('stab-l').classList.toggle('active',tab==='login');
+  document.getElementById('stab-r').classList.toggle('active',tab==='reg');
+  document.getElementById('sf-login').style.display=tab==='login'?'':'none';
+  document.getElementById('sf-reg').style.display=tab==='reg'?'':'none';
+  document.getElementById('s-err').textContent='';
+};
+
+function setErr(id,msg){document.getElementById(id).textContent=msg;}
+function showLoad(){document.getElementById('loading').classList.remove('hidden');}
+function hideLoad(){document.getElementById('loading').classList.add('hidden');}
+function toast(msg,isErr=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';setTimeout(()=>t.classList.remove('show'),3500);}
+function toAr(n){return n.toString().replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);}
+
+function initBG(){
+  const canvas=document.getElementById('bg-canvas');const ctx=canvas.getContext('2d');
+  function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  const pts=Array.from({length:50},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*2+.3,dx:(Math.random()-.5)*.3,dy:(Math.random()-.5)*.3,c:['rgba(0,212,255,','rgba(57,211,83,','rgba(255,107,53,'][Math.floor(Math.random()*3)],o:Math.random()*.35+.08}));
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<110){ctx.beginPath();ctx.strokeStyle=`rgba(0,212,255,${.04*(1-d/110)})`;ctx.lineWidth=.4;ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();}}
+    pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c+p.o+')';ctx.fill();p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>canvas.width)p.dx*=-1;if(p.y<0||p.y>canvas.height)p.dy*=-1;});
+    requestAnimationFrame(draw);
+  })();
+}
+</script>
+</body>
+</html>
