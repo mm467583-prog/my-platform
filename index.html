@@ -32,10 +32,18 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
 
 /* Mobile Nav */
 .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(4,12,24,.97);backdrop-filter:blur(20px);border-top:1px solid rgba(0,212,255,.1);padding:8px 0 max(8px,env(safe-area-inset-bottom));flex-direction:row;justify-content:space-around;}
-.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:.6rem;cursor:pointer;padding:4px 12px;border-radius:10px;transition:.2s;min-width:52px;}
-.mob-nav-btn .mnb-icon{font-size:1.3rem;line-height:1;}
+.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:.6rem;cursor:pointer;padding:4px 8px;border-radius:10px;transition:.2s;min-width:48px;flex:1;}
+.mob-nav-btn .mnb-icon{font-size:1.25rem;line-height:1;}
 .mob-nav-btn.active,.mob-nav-btn:hover{color:var(--physics);}
 .mob-nav-btn.active .mnb-icon{filter:drop-shadow(0 0 6px var(--physics));}
+.mob-nav-btn.logout-btn{color:var(--atom);}
+.mob-nav-btn.logout-btn:hover{color:#ff4444;}
+
+/* Mobile user bar */
+.mob-user-bar{display:none;position:fixed;top:66px;left:0;right:0;z-index:90;background:rgba(4,12,24,.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,212,255,.1);padding:8px 16px;align-items:center;justify-content:space-between;font-size:.82rem;}
+.mob-user-bar.visible{display:flex;}
+.mob-uname{color:var(--physics);font-weight:700;}
+.mob-logout{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);color:var(--atom);font-family:'Cairo',sans-serif;font-size:.75rem;padding:5px 14px;border-radius:20px;cursor:pointer;}
 
 /* ===== BUTTONS ===== */
 .btn-p{background:linear-gradient(135deg,var(--physics),#007aaa);color:#000;font-weight:800;padding:12px 28px;border-radius:50px;border:none;cursor:pointer;font-size:.9rem;font-family:'Cairo',sans-serif;transition:all .3s;box-shadow:0 0 24px rgba(0,212,255,.3);display:inline-flex;align-items:center;gap:7px;}
@@ -176,7 +184,43 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
 .fill-input{width:100%;background:rgba(255,255,255,.05);border:2px solid rgba(0,212,255,.2);border-radius:11px;padding:12px 15px;color:var(--text-main);font-family:'Cairo',sans-serif;font-size:.93rem;outline:none;margin-top:9px;transition:.3s;}
 .fill-input:focus{border-color:var(--physics);box-shadow:0 0 0 3px rgba(0,212,255,.1);}
 
-/* ===== RESULT MODAL ===== */
+/* ===== REVIEW MODAL ===== */
+.review-overlay{position:fixed;inset:0;background:rgba(4,12,24,.95);z-index:450;display:flex;align-items:flex-start;justify-content:center;padding:80px 16px 40px;backdrop-filter:blur(8px);overflow-y:auto;}
+.review-overlay.hidden{display:none;}
+.review-box{background:var(--card-bg);border:1px solid rgba(0,212,255,.2);border-radius:24px;padding:36px;max-width:700px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+.review-box h3{font-size:1.3rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.review-sub{color:var(--text-muted);font-size:.85rem;margin-bottom:28px;}
+.review-score-bar{background:rgba(255,255,255,.05);border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:18px;margin-bottom:24px;border:1px solid rgba(255,255,255,.06);}
+.rsb-score{font-size:2.2rem;font-weight:900;line-height:1;}
+.rsb-info{flex:1;}
+.rsb-info p{font-size:.83rem;color:var(--text-muted);}
+.rsb-pct{font-size:1.4rem;font-weight:800;}
+.r-q-item{background:rgba(255,255,255,.03);border:2px solid;border-radius:14px;padding:18px 20px;margin-bottom:14px;transition:.2s;}
+.r-q-item.correct{border-color:rgba(57,211,83,.35);background:rgba(57,211,83,.04);}
+.r-q-item.wrong{border-color:rgba(255,107,53,.35);background:rgba(255,107,53,.04);}
+.r-q-item.skipped{border-color:rgba(255,215,0,.2);background:rgba(255,215,0,.03);}
+.r-q-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.r-q-icon{font-size:1.2rem;}
+.r-q-num{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.07);}
+.r-q-text{font-weight:700;font-size:.92rem;flex:1;line-height:1.5;}
+.r-q-answers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
+@media(max-width:600px){.r-q-answers{grid-template-columns:1fr;}}
+.r-ans{padding:9px 14px;border-radius:10px;font-size:.83rem;border:1px solid transparent;display:flex;align-items:center;gap:7px;}
+.r-ans.correct-ans{background:rgba(57,211,83,.12);border-color:rgba(57,211,83,.3);color:var(--science);font-weight:700;}
+.r-ans.wrong-ans{background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.25);color:var(--atom);}
+.r-ans.neutral-ans{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.07);color:var(--text-muted);}
+/* Delete student confirm */
+.confirm-overlay{position:fixed;inset:0;background:rgba(4,12,24,.9);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.confirm-overlay.hidden{display:none;}
+.confirm-box{background:var(--card-bg);border:1px solid rgba(255,107,53,.3);border-radius:20px;padding:32px;max-width:400px;width:90%;text-align:center;animation:popIn .3s ease;}
+.confirm-box .ci{font-size:3rem;margin-bottom:14px;display:block;}
+.confirm-box h3{font-size:1.1rem;font-weight:800;margin-bottom:8px;}
+.confirm-box p{color:var(--text-muted);font-size:.86rem;margin-bottom:24px;line-height:1.6;}
+.confirm-btns{display:flex;gap:12px;justify-content:center;}
+.btn-danger{background:linear-gradient(135deg,#ff4444,#cc0000);color:#fff;font-weight:800;padding:11px 26px;border-radius:50px;border:none;cursor:pointer;font-size:.88rem;font-family:'Cairo',sans-serif;transition:.3s;}
+.btn-danger:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(255,68,68,.4);}
+.btn-cancel{background:rgba(255,255,255,.06);color:var(--text-muted);font-weight:700;padding:11px 26px;border-radius:50px;border:1px solid rgba(255,255,255,.1);cursor:pointer;font-size:.88rem;font-family:'Cairo',sans-serif;transition:.3s;}
+.btn-cancel:hover{background:rgba(255,255,255,.1);}
 .result-overlay{position:fixed;inset:0;background:rgba(4,12,24,.92);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
 .result-overlay.hidden{display:none;}
 .result-box{background:var(--card-bg);border:1px solid rgba(0,212,255,.2);border-radius:24px;padding:40px;max-width:480px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:popIn .5s cubic-bezier(.34,1.56,.64,1);}
@@ -275,8 +319,10 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
 @media(max-width:768px){
   nav{padding:0 16px;}
   .nav-links{display:none;}
+  #nav-user{display:none!important;}
+  #nb-login{display:none!important;}
   .mob-nav{display:flex;}
-  body{padding-bottom:70px;}
+  body{padding-bottom:72px;}
   .t-grid{grid-template-columns:1fr;}
   .t-sidebar{position:static;height:auto;border-left:none;border-bottom:1px solid var(--card-border);}
   .f-row{grid-template-columns:1fr;}
@@ -287,8 +333,6 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
   .sec{padding:40px 16px;}
   .ldr-page,.dash-page,.exam-pg{padding-left:16px;padding-right:16px;}
   .toast{bottom:80px;right:16px;left:16px;}
-  #nav-user{gap:6px;}
-  #nav-uname{font-size:.75rem;padding:4px 10px;}
 }
 </style>
 </head>
@@ -306,7 +350,41 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
     <div class="result-msg" id="result-msg-text"></div>
     <div class="result-btns">
       <button class="btn-p" onclick="closeResult()">📊 عرض لوحتي</button>
-      <button class="btn-s" onclick="goPage('leaderboard');closeResult()">🏆 الليدربورد</button>
+      <button class="btn-s" onclick="openReview()">🔍 راجع إجاباتك</button>
+      <button class="btn-o" style="padding:10px 18px;font-size:.82rem" onclick="goPage('leaderboard');closeResult()">🏆 الليدربورد</button>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="review-overlay hidden" id="review-overlay">
+  <div class="review-box">
+    <h3>🔍 مراجعة الإجابات</h3>
+    <p class="review-sub" id="review-sub"></p>
+    <div class="review-score-bar">
+      <div>
+        <div class="rsb-score" id="rv-score"></div>
+        <p style="font-size:.75rem;color:var(--text-muted);margin-top:2px">الدرجة</p>
+      </div>
+      <div class="rsb-info">
+        <div class="rsb-pct" id="rv-pct"></div>
+        <p id="rv-msg"></p>
+      </div>
+      <button class="btn-cancel" onclick="closeReview()" style="padding:8px 18px;font-size:.82rem">✕ إغلاق</button>
+    </div>
+    <div id="review-questions"></div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="confirm-overlay hidden" id="confirm-overlay">
+  <div class="confirm-box">
+    <span class="ci">🗑️</span>
+    <h3>حذف الطالب</h3>
+    <p id="confirm-msg">هل أنت متأكد من حذف هذا الطالب؟ سيتم حذف جميع بياناته ودرجاته.</p>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeConfirm()">إلغاء</button>
+      <button class="btn-danger" id="confirm-ok-btn" onclick="confirmDelete()">حذف نعم</button>
     </div>
   </div>
 </div>
@@ -318,6 +396,7 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
   <button class="mob-nav-btn" id="mnb-ldr" onclick="goPage('leaderboard');setMobNav('ldr')"><span class="mnb-icon">🏆</span>الليدربورد</button>
   <button class="mob-nav-btn" id="mnb-dash" onclick="goDash();setMobNav('dash')" style="display:none"><span class="mnb-icon">📊</span>لوحتي</button>
   <button class="mob-nav-btn" id="mnb-login" onclick="goPage('login');setMobNav('login')"><span class="mnb-icon">👤</span>دخول</button>
+  <button class="mob-nav-btn" id="mnb-logout" onclick="doLogout()" style="display:none;color:var(--atom);flex-direction:column;align-items:center;gap:3px"><span class="mnb-icon">🚪</span>خروج</button>
 </nav>
 
 <nav>
@@ -554,7 +633,7 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
       <div class="panel" id="panel-students">
         <div class="panel-title">👥 الطلاب المسجّلين</div>
         <input class="search-bar" type="text" id="s-search" placeholder="🔍 ابحث باسم الطالب..." oninput="filterStudents()">
-        <table class="stbl"><thead><tr><th>الاسم</th><th>المرحلة</th><th>الصف</th><th>البريد</th></tr></thead><tbody id="t-stud-body"></tbody></table>
+        <table class="stbl"><thead><tr><th>الاسم</th><th>المرحلة</th><th>الصف</th><th>البريد</th><th>إجراء</th></tr></thead><tbody id="t-stud-body"></tbody></table>
       </div>
 
       <div class="panel" id="panel-grades">
@@ -654,7 +733,7 @@ window.teacherLogin=()=>{
   }else setErr('t-err','كلمة السر غلط');
 };
 
-window.doLogout=()=>{currentUser=null;localStorage.removeItem('msUser');updateNav();goPage('home');toast('تم تسجيل الخروج');};
+window.doLogout=()=>{currentUser=null;localStorage.removeItem('msUser');updateNav();setMobNav('home');goPage('home');toast('تم تسجيل الخروج');};
 
 window.closeResult=()=>{document.getElementById('result-overlay').classList.add('hidden');};
 
@@ -667,15 +746,24 @@ window.setMobNav=(name)=>{
 
 function updateNav(){
   const in_=!!currentUser;
+  // Desktop
   document.getElementById('nb-login').style.display=in_?'none':'';
   document.getElementById('nav-user').style.display=in_?'flex':'none';
-  document.getElementById('mnb-login').style.display=in_?'none':'';
-  document.getElementById('mnb-dash').style.display=in_?'':'none';
   if(in_){
     document.getElementById('nav-uname').textContent=currentUser.role==='teacher'?'👨‍🏫 المدرس':'🎓 '+currentUser.name;
     document.getElementById('nb-sdash').style.display=currentUser.role==='student'?'':'none';
     document.getElementById('nb-tdash').style.display=currentUser.role==='teacher'?'':'none';
-  }else{document.getElementById('nb-sdash').style.display='none';document.getElementById('nb-tdash').style.display='none';}
+  }else{
+    document.getElementById('nb-sdash').style.display='none';
+    document.getElementById('nb-tdash').style.display='none';
+  }
+  // Mobile nav - use flex for visible items
+  const mLogin=document.getElementById('mnb-login');
+  const mDash=document.getElementById('mnb-dash');
+  const mLogout=document.getElementById('mnb-logout');
+  if(mLogin)mLogin.style.display=in_?'none':'flex';
+  if(mDash)mDash.style.display=in_?'flex':'none';
+  if(mLogout)mLogout.style.display=in_?'flex':'none';
 }
 
 async function loadStats(){
@@ -773,13 +861,31 @@ function startTimer(secs){
 window.submitExam=async()=>{
   clearInterval(examTimerInt);if(!currentExam)return;
   const qs=currentExam.questions;let score=0;
+  // Save detailed answers for review
+  const reviewData=[];
   qs.forEach((q,i)=>{
     const type=q.type||'mcq';
-    if(type==='mcq'){const s=document.querySelector(`input[name="q${i}"]:checked`);if(s&&parseInt(s.value)===q.correct)score++;}
-    else if(type==='tf'){const v=document.getElementById('tf-'+i)?.value;const c=q.correct===true||q.correct==='true';if((v==='true')===c)score++;}
-    else if(type==='fill'){const v=document.getElementById('fill-'+i)?.value.trim().toLowerCase();const a=String(q.answer||'').trim().toLowerCase();if(v&&v===a)score++;}
+    let userAns=null,correct=false;
+    if(type==='mcq'){
+      const s=document.querySelector(`input[name="q${i}"]:checked`);
+      userAns=s?parseInt(s.value):null;
+      correct=userAns!==null&&userAns===q.correct;
+    }else if(type==='tf'){
+      const v=document.getElementById('tf-'+i)?.value;
+      userAns=v===''?null:v==='true';
+      const c=q.correct===true||q.correct==='true';
+      correct=userAns!==null&&userAns===c;
+    }else if(type==='fill'){
+      userAns=document.getElementById('fill-'+i)?.value.trim()||null;
+      const a=String(q.answer||'').trim().toLowerCase();
+      correct=!!userAns&&userAns.toLowerCase()===a;
+    }
+    if(correct)score++;
+    reviewData.push({q,type,userAns,correct,skipped:userAns===null||userAns===''});
   });
   const total=qs.length,pct=Math.round(score/total*100);
+  // Store for review modal
+  window._lastReview={reviewData,score,total,pct,title:currentExam.title,subject:currentExam.subject};
   showLoad();
   await api({type:'submission',userName:currentUser.name,userStage:currentUser.stage||'',examTitle:currentExam.title,subject:currentExam.subject,grade:currentExam.grade,score,total,percentage:pct});
   hideLoad();currentExam=null;
@@ -794,6 +900,77 @@ window.submitExam=async()=>{
   document.getElementById('result-overlay').classList.remove('hidden');
   goPage('sdash');
   await loadStudentGrades();await loadStats();await loadLeaderboard();
+};
+
+window.openReview=()=>{
+  const rv=window._lastReview;
+  if(!rv){toast('لا يوجد امتحان لمراجعته',true);return;}
+  closeResult();
+  document.getElementById('review-sub').textContent=rv.title+' · '+rv.subject;
+  document.getElementById('rv-score').textContent=rv.score+' / '+rv.total;
+  const pctEl=document.getElementById('rv-pct');
+  pctEl.textContent=rv.pct+'%';
+  pctEl.style.color=rv.pct>=90?'var(--science)':rv.pct>=70?'var(--physics)':rv.pct>=50?'var(--gold)':'var(--atom)';
+  document.getElementById('rv-msg').textContent=rv.pct>=90?'ممتاز 🏆':rv.pct>=70?'جيد جداً 🎉':rv.pct>=50?'مقبول 😊':'تحتاج مراجعة 💪';
+  document.getElementById('review-questions').innerHTML=rv.reviewData.map((item,i)=>{
+    const{q,type,userAns,correct,skipped}=item;
+    const cls=skipped?'skipped':correct?'correct':'wrong';
+    const icon=skipped?'⏭️':correct?'✅':'❌';
+    let answersHTML='';
+    if(type==='mcq'){
+      answersHTML='<div class="r-q-answers">'+q.options.map((opt,oi)=>{
+        let ac='neutral-ans';
+        if(oi===q.correct)ac='correct-ans';
+        else if(oi===userAns&&!correct)ac='wrong-ans';
+        const marker=oi===q.correct?'✅ ':oi===userAns&&!correct?'❌ ':'';
+        return`<div class="r-ans ${ac}">${marker}${opt}</div>`;
+      }).join('')+'</div>';
+      if(skipped)answersHTML+='<p style="font-size:.78rem;color:var(--gold);margin-top:8px">⚠️ لم تجب على هذا السؤال — الإجابة الصحيحة: <strong>${q.options[q.correct]}</strong></p>';
+    }else if(type==='tf'){
+      const cVal=q.correct===true||q.correct==='true';
+      answersHTML='<div class="r-q-answers">'
+        +`<div class="r-ans ${cVal?'correct-ans':'neutral-ans'}">${cVal?'✅':''} صح</div>`
+        +`<div class="r-ans ${!cVal?'correct-ans':'neutral-ans'}">${!cVal?'✅':''} غلط</div>`
+        +'</div>';
+      if(!correct&&!skipped)answersHTML+=`<p style="font-size:.78rem;color:var(--atom);margin-top:8px">❌ إجابتك: <strong>${userAns?'صح':'غلط'}</strong> — الصحيح: <strong>${cVal?'صح':'غلط'}</strong></p>`;
+      if(skipped)answersHTML+=`<p style="font-size:.78rem;color:var(--gold);margin-top:8px">⚠️ لم تجب — الإجابة الصحيحة: <strong>${cVal?'صح':'غلط'}</strong></p>`;
+    }else if(type==='fill'){
+      answersHTML=`<div style="margin-top:8px">`;
+      if(!skipped)answersHTML+=`<div class="r-ans ${correct?'correct-ans':'wrong-ans'}" style="margin-bottom:7px">${correct?'✅':'❌'} إجابتك: <strong>${userAns}</strong></div>`;
+      if(!correct)answersHTML+=`<div class="r-ans correct-ans">✅ الإجابة الصحيحة: <strong>${q.answer}</strong></div>`;
+      if(skipped)answersHTML+=`<div class="r-ans neutral-ans">⚠️ لم تجب — الإجابة: <strong>${q.answer}</strong></div>`;
+      answersHTML+='</div>';
+    }
+    return`<div class="r-q-item ${cls}">
+      <div class="r-q-header">
+        <span class="r-q-icon">${icon}</span>
+        <span class="r-q-num">سؤال ${i+1}</span>
+        <span class="r-q-text">${q.text}</span>
+      </div>
+      ${answersHTML}
+    </div>`;
+  }).join('');
+  document.getElementById('review-overlay').classList.remove('hidden');
+};
+
+window.closeReview=()=>{document.getElementById('review-overlay').classList.add('hidden');};
+
+// ===== DELETE STUDENT =====
+let _deleteTarget=null;
+window.askDeleteStudent=(name,id)=>{
+  _deleteTarget={name,id};
+  document.getElementById('confirm-msg').textContent=`هل أنت متأكد من حذف الطالب "${name}"؟ سيتم حذف جميع بياناته ودرجاته نهائياً.`;
+  document.getElementById('confirm-overlay').classList.remove('hidden');
+};
+window.closeConfirm=()=>{document.getElementById('confirm-overlay').classList.add('hidden');_deleteTarget=null;};
+window.confirmDelete=async()=>{
+  if(!_deleteTarget)return;
+  document.getElementById('confirm-overlay').classList.add('hidden');
+  showLoad();
+  await api({type:'deleteStudent',studentName:_deleteTarget.name,studentId:_deleteTarget.id});
+  hideLoad();_deleteTarget=null;
+  toast('✅ تم حذف الطالب بنجاح');
+  await loadTeacherData();
 };
 
 async function loadStudentGrades(){
@@ -895,8 +1072,14 @@ function renderCharts(){
 
 function renderStudents(list){
   const tbody=document.getElementById('t-stud-body');
-  if(!list.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px">لا يوجد طلاب</td></tr>';return;}
-  tbody.innerHTML=list.map(s=>`<tr><td>${s.name||'—'}</td><td>${s.stage||'—'}</td><td>${s.grade||'—'}</td><td style="font-size:.78rem;color:var(--text-muted)">${s.email||'—'}</td></tr>`).join('');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:14px">لا يوجد طلاب</td></tr>';return;}
+  tbody.innerHTML=list.map(s=>`<tr>
+    <td>${s.name||'—'}</td>
+    <td>${s.stage||'—'}</td>
+    <td>${s.grade||'—'}</td>
+    <td style="font-size:.78rem;color:var(--text-muted)">${s.email||'—'}</td>
+    <td><button onclick="askDeleteStudent('${s.name}','${s.id||s.name}')" style="background:rgba(255,107,53,.12);border:1px solid rgba(255,107,53,.25);color:var(--atom);border-radius:8px;padding:4px 12px;cursor:pointer;font-family:Cairo,sans-serif;font-size:.75rem;font-weight:700;transition:.2s" onmouseover="this.style.background='rgba(255,107,53,.25)'" onmouseout="this.style.background='rgba(255,107,53,.12)'">🗑️ حذف</button></td>
+  </tr>`).join('');
 }
 
 window.filterStudents=()=>{const q=document.getElementById('s-search').value.toLowerCase();renderStudents(allStudents.filter(s=>(s.name||'').toLowerCase().includes(q)));};
