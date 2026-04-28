@@ -508,6 +508,16 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
     </div>
     <div class="card"><h3>📝 الامتحانات المتاحة</h3><div class="exam-list" id="s-exam-list"><p style="color:var(--text-muted);text-align:center;padding:20px">جاري التحميل...</p></div></div>
     <div class="card"><h3>📊 درجاتي</h3><table class="gtbl"><thead><tr><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>الوقت</th></tr></thead><tbody id="s-grades"></tbody></table></div>
+    <div class="card">
+      <h3>🔐 تغيير كلمة السر</h3>
+      <div style="max-width:380px">
+        <div class="fg" style="margin-bottom:12px"><label>كلمة السر الحالية</label><input type="password" id="cp-old" placeholder="••••••"></div>
+        <div class="fg" style="margin-bottom:12px"><label>كلمة السر الجديدة</label><input type="password" id="cp-new" placeholder="••••••"></div>
+        <div class="fg" style="margin-bottom:16px"><label>تأكيد كلمة السر الجديدة</label><input type="password" id="cp-confirm" placeholder="••••••"></div>
+        <div id="cp-err" class="err"></div>
+        <button class="btn-s" onclick="changePassword()" style="margin-top:8px">💾 حفظ كلمة السر الجديدة</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -622,26 +632,39 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
 
 <script>
 const SHEET_URL='https://script.google.com/macros/s/AKfycbw46NUcIhD2LjoBWzV-sC9aXpJkP84YexYSevRZT-hN9MLXOePZoBRw1l92mpOTfTZb/exec';
-const TEACHER_PASS='mostafa2025';
 const GRADES_MAP={'ابتدائي':['رابعة ابتدائي','خامسة ابتدائي','سادسة ابتدائي'],'إعدادي':['أولى إعداد','تانية إعداد','تالتة إعداد'],'ثانوي':['أولى ثانوي','تانية ثانوي','تالتة ثانوي']};
 let currentUser=null,currentExam=null,examTimerInt=null,qCount=0;
 let allStudents=[],allGrades=[],allExams=[];
 let sChartInst=null;
 
-async function api(data){
+// ===== CACHE =====
+const _cache={};
+async function apiCached(data,ttl=120000){
+  const key=JSON.stringify(data);
+  const now=Date.now();
+  if(_cache[key]&&now-_cache[key].ts<ttl)return _cache[key].val;
+  const val=await apiRaw(data);
+  _cache[key]={val,ts:now};
+  return val;
+}
+function clearCache(){Object.keys(_cache).forEach(k=>delete _cache[k]);}
+
+async function apiRaw(data){
   try{
-    const r=await fetch(SHEET_URL,{
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify(data)
-    });
+    const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(data)});
     return await r.json();
   }catch{
-    try{
-      const r=await fetch(SHEET_URL+'?data='+encodeURIComponent(JSON.stringify(data)));
-      return await r.json();
-    }catch{return null;}
+    try{const r=await fetch(SHEET_URL+'?data='+encodeURIComponent(JSON.stringify(data)));return await r.json();}
+    catch{return null;}
   }
+}
+
+// write ops skip cache, read ops use cache
+async function api(data){
+  const readTypes=['getExams','getStudents','getGrades'];
+  if(readTypes.includes(data.type))return apiCached(data);
+  clearCache();
+  return apiRaw(data);
 }
 
 window.onload=async()=>{
@@ -699,8 +722,13 @@ window.studentRegister=async()=>{
   await loadStudentExams();goPage('sdash');toast('تم إنشاء حسابك 🎉');await loadStats();
 };
 
-window.teacherLogin=()=>{
-  if(document.getElementById('t-pass').value===TEACHER_PASS){
+window.teacherLogin=async()=>{
+  const pass=document.getElementById('t-pass').value;
+  if(!pass){setErr('t-err','اكتب كلمة السر');return;}
+  showLoad();
+  const res=await apiRaw({type:'teacherLogin',password:pass});
+  hideLoad();
+  if(res?.success){
     currentUser={name:'مستر مصطفى',role:'teacher'};
     localStorage.setItem('msUser',JSON.stringify(currentUser));
     updateNav();loadTeacherData();goPage('tdash');toast('أهلاً مستر مصطفى 👨‍🏫');
@@ -799,18 +827,54 @@ window.startExam=async(id)=>{
   const exam=allExams.find(e=>e.id==id);
   if(!exam){toast('الامتحان مش موجود',true);return;}
   if(exam.code){const c=prompt('🔒 أدخل كود الدخول:');if(c!==exam.code){toast('كود غلط!',true);return;}}
-  currentExam=exam;
+  // Check for saved progress
+  const savedKey='exam_progress_'+id;
+  const saved=localStorage.getItem(savedKey);
+  if(saved){
+    const p=JSON.parse(saved);
+    if(confirm('عندك إجابات محفوظة من قبل، تكمل من بعدين؟')){
+      currentExam={...exam,_savedKey:savedKey,_savedAnswers:p.answers};
+    }else{
+      localStorage.removeItem(savedKey);
+      currentExam={...exam,_savedKey:savedKey};
+    }
+  }else{
+    currentExam={...exam,_savedKey:savedKey};
+  }
   document.getElementById('ex-title').textContent=exam.title;
   document.getElementById('ex-subj').textContent=exam.subject+' · '+exam.grade;
-  renderExamQs(exam.questions);startTimer(exam.duration*60);goPage('exam');
+  renderExamQs(exam.questions);
+  startTimer(exam.duration*60);
+  goPage('exam');
 };
 
+function saveExamProgress(){
+  if(!currentExam?._savedKey)return;
+  const answers={};
+  currentExam.questions.forEach((q,i)=>{
+    const type=q.type||'mcq';
+    if(type==='mcq'){const s=document.querySelector(`input[name="q${i}"]:checked`);if(s)answers[i]=s.value;}
+    else if(type==='tf'){const v=document.getElementById('tf-'+i)?.value;if(v!=='')answers[i]=v;}
+    else if(type==='fill'){const v=document.getElementById('fill-'+i)?.value;if(v)answers[i]=v;}
+  });
+  localStorage.setItem(currentExam._savedKey,JSON.stringify({answers,ts:Date.now()}));
+}
+
 function renderExamQs(questions){
+  const saved=currentExam?._savedAnswers||{};
   document.getElementById('ex-questions').innerHTML=questions.map((q,i)=>{
     const type=q.type||'mcq';let inner='';
-    if(type==='mcq')inner=`<div class="opts-grid">${q.options.map((o,oi)=>`<label class="opt-lbl"><input type="radio" name="q${i}" value="${oi}"> ${o}</label>`).join('')}</div>`;
-    else if(type==='tf')inner=`<div class="tf-grid"><button class="tf-btn" onclick="selTF(${i},true,this)">✅ صح</button><button class="tf-btn" onclick="selTF(${i},false,this)">❌ غلط</button></div><input type="hidden" id="tf-${i}" value="">`;
-    else if(type==='fill')inner=`<input class="fill-input" type="text" id="fill-${i}" placeholder="اكتب إجابتك هنا...">`;
+    if(type==='mcq'){
+      inner=`<div class="opts-grid">${q.options.map((o,oi)=>`<label class="opt-lbl"><input type="radio" name="q${i}" value="${oi}" ${saved[i]==oi?'checked':''} onchange="saveExamProgress()"> ${o}</label>`).join('')}</div>`;
+    }else if(type==='tf'){
+      const sv=saved[i]||'';
+      inner=`<div class="tf-grid">
+        <button class="tf-btn ${sv==='true'?'sel-t':''}" onclick="selTF(${i},true,this)">✅ صح</button>
+        <button class="tf-btn ${sv==='false'?'sel-f':''}" onclick="selTF(${i},false,this)">❌ غلط</button>
+      </div><input type="hidden" id="tf-${i}" value="${sv}">`;
+    }else if(type==='fill'){
+      inner=`<input class="fill-input" type="text" id="fill-${i}" placeholder="اكتب إجابتك هنا..." value="${saved[i]||''}" oninput="saveExamProgress()">`;
+    }
     return`<div class="q-card"><div class="q-num">سؤال ${i+1}</div><div class="q-text">${q.text}</div>${inner}</div>`;
   }).join('');
 }
@@ -819,6 +883,7 @@ window.selTF=(i,val,btn)=>{
   btn.parentElement.querySelectorAll('.tf-btn').forEach(b=>{b.classList.remove('sel-t','sel-f');});
   btn.classList.add(val?'sel-t':'sel-f');
   document.getElementById('tf-'+i).value=val?'true':'false';
+  saveExamProgress();
 };
 
 function startTimer(secs){
@@ -860,6 +925,8 @@ window.submitExam=async()=>{
   const total=qs.length,pct=Math.round(score/total*100);
   // Store for review modal
   window._lastReview={reviewData,score,total,pct,title:currentExam.title,subject:currentExam.subject};
+  // Clear saved progress
+  if(currentExam._savedKey)localStorage.removeItem(currentExam._savedKey);
   showLoad();
   await api({type:'submission',userName:currentUser.name,userStage:currentUser.stage||'',examTitle:currentExam.title,subject:currentExam.subject,grade:currentExam.grade,score,total,percentage:pct});
   hideLoad();currentExam=null;
@@ -929,7 +996,27 @@ window.openReview=()=>{
 
 window.closeReview=()=>{document.getElementById('review-overlay').classList.add('hidden');};
 
-// ===== DELETE STUDENT =====
+window.changePassword=async()=>{
+  const oldP=document.getElementById('cp-old').value;
+  const newP=document.getElementById('cp-new').value;
+  const conf=document.getElementById('cp-confirm').value;
+  const err=e=>document.getElementById('cp-err').textContent=e;
+  err('');
+  if(!oldP||!newP||!conf){err('اكمل كل الحقول');return;}
+  if(newP.length<6){err('كلمة السر الجديدة على الأقل ٦ أحرف');return;}
+  if(newP!==conf){err('كلمة السر الجديدة مش متطابقة');return;}
+  showLoad();
+  const res=await apiRaw({type:'changePassword',email:currentUser.email,oldPassword:oldP,newPassword:newP});
+  hideLoad();
+  if(res?.success){
+    document.getElementById('cp-old').value='';
+    document.getElementById('cp-new').value='';
+    document.getElementById('cp-confirm').value='';
+    toast('✅ تم تغيير كلمة السر بنجاح');
+  }else{
+    err(res?.msg||'كلمة السر الحالية غلط');
+  }
+};
 let _deleteTarget=null;
 window.askDeleteStudent=(name,id)=>{
   _deleteTarget={name,id};
