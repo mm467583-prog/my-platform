@@ -507,7 +507,13 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
       <div class="chart-card"><h4>🎯 إحصائياتك</h4><div id="student-stats-detail"><p style="color:var(--text-muted);font-size:.85rem">قدّم امتحانات لتظهر إحصائياتك</p></div></div>
     </div>
     <div class="card"><h3>📝 الامتحانات المتاحة</h3><div class="exam-list" id="s-exam-list"><p style="color:var(--text-muted);text-align:center;padding:20px">جاري التحميل...</p></div></div>
-    <div class="card"><h3>📊 درجاتي</h3><table class="gtbl"><thead><tr><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>الوقت</th></tr></thead><tbody id="s-grades"></tbody></table></div>
+    <div class="card">
+      <h3 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <span>📊 درجاتي</span>
+        <button class="btn-s" onclick="exportStudentPDF()" style="padding:8px 16px;font-size:.8rem">🖨️ طباعة / PDF</button>
+      </h3>
+      <table class="gtbl"><thead><tr><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>الوقت</th></tr></thead><tbody id="s-grades"></tbody></table>
+    </div>
     <div class="card">
       <h3>🔐 تغيير كلمة السر</h3>
       <div style="max-width:380px">
@@ -1000,11 +1006,12 @@ window.changePassword=async()=>{
   const oldP=document.getElementById('cp-old').value;
   const newP=document.getElementById('cp-new').value;
   const conf=document.getElementById('cp-confirm').value;
-  const err=e=>document.getElementById('cp-err').textContent=e;
-  err('');
-  if(!oldP||!newP||!conf){err('اكمل كل الحقول');return;}
-  if(newP.length<6){err('كلمة السر الجديدة على الأقل ٦ أحرف');return;}
-  if(newP!==conf){err('كلمة السر الجديدة مش متطابقة');return;}
+  const errEl=document.getElementById('cp-err');
+  errEl.textContent='';
+  if(!oldP||!newP||!conf){errEl.textContent='اكمل كل الحقول';return;}
+  if(newP.length<6){errEl.textContent='كلمة السر الجديدة على الأقل ٦ أحرف';return;}
+  if(newP!==conf){errEl.textContent='كلمة السر الجديدة مش متطابقة';return;}
+  if(!currentUser?.email){errEl.textContent='سجّل خروج ودخول من أول وجديد';return;}
   showLoad();
   const res=await apiRaw({type:'changePassword',email:currentUser.email,oldPassword:oldP,newPassword:newP});
   hideLoad();
@@ -1014,9 +1021,58 @@ window.changePassword=async()=>{
     document.getElementById('cp-confirm').value='';
     toast('✅ تم تغيير كلمة السر بنجاح');
   }else{
-    err(res?.msg||'كلمة السر الحالية غلط');
+    errEl.textContent=res?.msg||'كلمة السر الحالية غلط';
   }
 };
+
+window.exportStudentPDF=()=>{
+  if(!currentUser)return;
+  const grades=document.getElementById('s-grades');
+  const rows=[...grades.querySelectorAll('tr')];
+  if(!rows.length){toast('لا يوجد درجات للطباعة',true);return;}
+  const allGradesData=rows.map(r=>{
+    const cells=[...r.querySelectorAll('td')];
+    return{exam:cells[0]?.textContent,subj:cells[1]?.textContent,score:cells[2]?.textContent,time:cells[3]?.textContent};
+  }).filter(r=>r.exam);
+  const pcts=allGradesData.map(r=>{const m=r.score?.match(/\((\d+)%\)/);return m?parseInt(m[1]):0;});
+  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  const best=pcts.length?Math.max(...pcts):0;
+  const grade=avg>=90?'ممتاز':avg>=75?'جيد جداً':avg>=60?'جيد':avg>=50?'مقبول':'ضعيف';
+  const gradeColor=avg>=90?'#39d353':avg>=75?'#00d4ff':avg>=60?'#ffd700':avg>=50?'#ff9500':'#ff6b35';
+  const tableRows=allGradesData.map((r,i)=>{
+    const pct=pcts[i];
+    const color=pct>=80?'#39d353':pct>=60?'#00d4ff':'#ff6b35';
+    return`<tr style="border-bottom:1px solid #e8f0fe"><td style="padding:10px 14px">${r.exam||'—'}</td><td style="padding:10px 14px">${r.subj||'—'}</td><td style="padding:10px 14px;font-weight:700;color:${color}">${r.score||'—'}</td><td style="padding:10px 14px;color:#888;font-size:.85rem">${r.time||'—'}</td></tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Cairo',sans-serif;background:#fff;color:#1a1a2e;padding:40px;direction:rtl;}
+.header{background:linear-gradient(135deg,#040c18,#0d1e3a);color:#fff;padding:30px 36px;border-radius:16px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;}
+.header h1{font-size:1.4rem;font-weight:900;margin-bottom:4px;}.header p{font-size:.85rem;opacity:.7;}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+.stat{background:#f0f7ff;border:1px solid #d0e8ff;border-radius:12px;padding:18px;text-align:center;}
+.stat .val{font-size:1.8rem;font-weight:900;margin-bottom:4px;}.stat .lbl{font-size:.78rem;color:#666;}
+.grade-badge{background:${gradeColor}22;border:2px solid ${gradeColor};border-radius:50px;padding:6px 22px;font-weight:900;color:${gradeColor};font-size:1rem;display:inline-block;margin-bottom:24px;}
+table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);}
+thead{background:#040c18;color:#fff;}th{padding:12px 14px;font-size:.85rem;text-align:right;}
+tbody tr:hover{background:#f5f9ff;}
+.footer{margin-top:28px;text-align:center;color:#aaa;font-size:.78rem;border-top:1px solid #eee;padding-top:16px;}
+@media print{body{padding:20px;}}</style></head><body>
+<div class="header"><div><h1>تقرير درجات الطالب</h1><p>منصة مستر مصطفى السايس — الفيزياء والعلوم</p>
+<p style="margin-top:6px;font-size:.9rem">الطالب: <strong>${currentUser.name}</strong> | ${currentUser.stage||''} · ${currentUser.grade||''}</p></div><div style="font-size:2.5rem">⚛️</div></div>
+<div style="margin-bottom:16px"><span class="grade-badge">التقدير العام: ${grade}</span></div>
+<div class="stats">
+<div class="stat"><div class="val" style="color:#00d4ff">${allGradesData.length}</div><div class="lbl">عدد الامتحانات</div></div>
+<div class="stat"><div class="val" style="color:${gradeColor}">${avg}%</div><div class="lbl">المتوسط العام</div></div>
+<div class="stat"><div class="val" style="color:#39d353">${best}%</div><div class="lbl">أعلى درجة</div></div>
+</div>
+<table><thead><tr><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>الوقت</th></tr></thead><tbody>${tableRows}</tbody></table>
+<div class="footer">تم إنشاء هذا التقرير بتاريخ ${new Date().toLocaleDateString('ar-EG')} — منصة مستر مصطفى السايس</div>
+<script>window.onload=()=>window.print();<\/script></body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);w.document.close();
+};
+
 let _deleteTarget=null;
 window.askDeleteStudent=(name,id)=>{
   _deleteTarget={name,id};
