@@ -666,8 +666,19 @@ let allStudents=[],allGrades=[],allExams=[];
 let sChartInst=null;
 
 async function api(data){
-  try{const r=await fetch(SHEET_URL,{method:'POST',body:JSON.stringify(data)});return await r.json();}
-  catch{try{const r=await fetch(SHEET_URL+'?data='+encodeURIComponent(JSON.stringify(data)));return await r.json();}catch{return null;}}
+  try{
+    const r=await fetch(SHEET_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(data)
+    });
+    return await r.json();
+  }catch{
+    try{
+      const r=await fetch(SHEET_URL+'?data='+encodeURIComponent(JSON.stringify(data)));
+      return await r.json();
+    }catch{return null;}
+  }
 }
 
 window.onload=async()=>{
