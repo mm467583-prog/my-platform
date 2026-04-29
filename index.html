@@ -209,7 +209,24 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
 .r-ans.correct-ans{background:rgba(57,211,83,.12);border-color:rgba(57,211,83,.3);color:var(--science);font-weight:700;}
 .r-ans.wrong-ans{background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.25);color:var(--atom);}
 .r-ans.neutral-ans{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.07);color:var(--text-muted);}
-/* Delete student confirm */
+/* Manual Grading */
+.mg-student-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:20px;margin-bottom:14px;transition:.2s;}
+.mg-student-card:hover{border-color:rgba(0,212,255,.2);}
+.mg-student-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.mg-student-name{font-weight:800;font-size:.95rem;flex:1;}
+.mg-status{font-size:.75rem;padding:4px 12px;border-radius:20px;font-weight:700;}
+.mg-status.pending{background:rgba(255,215,0,.1);color:var(--gold);}
+.mg-status.done{background:rgba(57,211,83,.1);color:var(--science);}
+.mg-q-row{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:14px;margin-bottom:10px;}
+.mg-q-text{font-size:.85rem;font-weight:700;margin-bottom:6px;color:var(--text-muted);}
+.mg-q-ans{font-size:.93rem;margin-bottom:10px;padding:8px 12px;background:rgba(0,212,255,.06);border-radius:8px;border-right:3px solid var(--physics);}
+.mg-btns{display:flex;gap:8px;}
+.mg-btn-correct{background:rgba(57,211,83,.15);border:1px solid rgba(57,211,83,.35);color:var(--science);font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;padding:7px 18px;border-radius:10px;cursor:pointer;transition:.2s;}
+.mg-btn-correct:hover,.mg-btn-correct.selected{background:rgba(57,211,83,.3);border-color:var(--science);}
+.mg-btn-wrong{background:rgba(255,107,53,.12);border:1px solid rgba(255,107,53,.3);color:var(--atom);font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;padding:7px 18px;border-radius:10px;cursor:pointer;transition:.2s;}
+.mg-btn-wrong:hover,.mg-btn-wrong.selected{background:rgba(255,107,53,.25);border-color:var(--atom);}
+.mg-save-btn{background:linear-gradient(135deg,var(--physics),#007aaa);color:#000;font-weight:800;padding:11px 24px;border-radius:50px;border:none;cursor:pointer;font-size:.88rem;font-family:'Cairo',sans-serif;width:100%;margin-top:14px;transition:.3s;}
+.mg-save-btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,212,255,.3);}
 .confirm-overlay{position:fixed;inset:0;background:rgba(4,12,24,.9);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
 .confirm-overlay.hidden{display:none;}
 .confirm-box{background:var(--card-bg);border:1px solid rgba(255,107,53,.3);border-radius:20px;padding:32px;max-width:400px;width:90%;text-align:center;animation:popIn .3s ease;}
@@ -562,6 +579,7 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
       <button class="sb-btn" onclick="showPanel('exlist')" id="sb-exlist">📋 الامتحانات</button>
       <button class="sb-btn" onclick="showPanel('students')" id="sb-students">👥 الطلاب</button>
       <button class="sb-btn" onclick="showPanel('grades')" id="sb-grades">🏆 الدرجات</button>
+      <button class="sb-btn" onclick="showPanel('manual-grade')" id="sb-manual-grade">✏️ تصحيح يدوي</button>
       <button class="sb-btn" onclick="showPanel('analytics')" id="sb-analytics">📈 التحليلات</button>
     </div>
     <div class="t-main">
@@ -622,6 +640,18 @@ nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(4,12,24,.95);bac
           <select class="fsel" id="filter-exam-g" onchange="filterGrades()"><option value="">كل الامتحانات</option></select>
         </div>
         <table class="stbl"><thead><tr><th>الطالب</th><th>الامتحان</th><th>المادة</th><th>الدرجة</th><th>النسبة</th><th>الوقت</th></tr></thead><tbody id="t-grades-body"></tbody></table>
+      </div>
+
+      <div class="panel" id="panel-manual-grade">
+        <div class="panel-title">✏️ تصحيح يدوي لأسئلة الأكمل</div>
+        <div style="background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:.85rem;color:var(--gold);line-height:1.7">
+          ⚠️ هنا بتظهر إجابات الطلاب لأسئلة الأكمل — راجع كل إجابة وحدد لو صح أو غلط
+        </div>
+        <div class="ff" style="margin-bottom:18px">
+          <label>اختار امتحان</label>
+          <select class="fsel" id="mg-exam-sel" onchange="loadManualGrading()" style="width:100%"><option value="">— اختار امتحان —</option></select>
+        </div>
+        <div id="mg-container"><p style="color:var(--text-muted);text-align:center;padding:30px">اختار امتحان أولاً</p></div>
       </div>
 
       <div class="panel" id="panel-analytics">
